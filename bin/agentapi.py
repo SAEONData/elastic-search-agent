@@ -110,8 +110,10 @@ class AgentAPI(object):
     @cherrypy.expose
     def oaipmh(self, **kwargs):
         cherrypy.log('oai')
+        request = cherrypy.request
 
-        response = process_request(**kwargs)
+        response = process_request(
+            request.base, request.query_string, **kwargs)
 
         # prepare return on XML
         cherrypy.response.headers['Content-Type'] = \
