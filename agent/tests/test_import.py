@@ -24,11 +24,13 @@ def import_metadata_record(path):
 
 def import_metadata_records():
     paths = ["Institutions/coj/coj/metadata", ]
+    paths = ["Portals/test-mike/testcustmike/metadata", ]
     for path in paths:
         records = import_metadata_record(path)
         records = json.loads(records)
         for record in records['content']:
             add_a_metadata_record(record['jsonData'])
+            import pdb; pdb.set_trace()
 
 
 if __name__ == "__main__":

@@ -1,18 +1,9 @@
 from agent.config import index_name
+from agent.datacite_export import generateXML
 from datetime import datetime
 from elasticsearch_dsl import Search
 from elasticsearch_dsl import Q
 import xml.etree.ElementTree as ET
-
-
-def format_record(element, record):
-    identifier = 'NONE'
-    if record.get('identifier'):
-        identifier = record.get('identifier').get('identifier')
-
-    child = ET.SubElement(element, 'identifier')
-    child.text = identifier
-    return
 
 
 def format_response(root, records):
@@ -22,7 +13,7 @@ def format_response(root, records):
         for record in records:
             e_record = ET.SubElement(e_getrecord, "record")
             try:
-                format_record(e_record, record.to_dict().get('record'))
+                generateXML(e_record, record.to_dict().get('record'))
             except AttributeError as e:
                 print('AttributeError: {}'.format(e))
     return
@@ -38,8 +29,12 @@ def get_record(root, request_element, **kwargs):
         request_element.set(k, kwargs[k])
         if k == 'identifier':
             key = 'record.identifier.identifier'
+        elif k == 'metadataPrefix':
+            # TODO
+            pass
         else:
-            key = 'record.{}'.format(k)
+            # TODO
+            raise RuntimeError('get_record: unknown param {}'.format(k))
         q_item = Q({"match": {key: kwargs[k]}})
         q_list.append(q_item)
     if q_list:

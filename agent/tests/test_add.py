@@ -27,6 +27,88 @@ def add_metadata_records():
 
 JSON_DICTS = [
     {
+        'additionalFields': {
+            'coverageBegin': '',
+            'coverageEnd': '',
+            'onlineResources': [
+                {'desc': 'Original Metadata Record',
+                 'func': 'metadata',
+                 'href': 'http://qa.dirisa.org/Portals/test-mike/testcustmike/metadata/metadata.2018-02-28.9981326861/getOriginalXml',
+                 'name': 'Original Metadata Record'}],
+            'source_uri': '',
+            'status': 'complete'
+        },
+        'alternateIdentifiers': [{
+            'alternateIdentifier': 'http://schema.datacite.org/schema/meta/kernel-3.1/example/datacite-example-full-v3.1.xml',
+            'alternateIdentifierType': 'URL'}],
+        'bounds': [-68.302, 30.233, -66.302, 32.233000000000004],
+        'contributors': [{
+            'affiliation': 'California Digital Library',
+            'contributorName': 'Starr, Joan',
+            'contributorType': 'ProjectLeader',
+            'nameIdentifier': '0000-0002-7285-027X',
+            'nameIdentifierScheme': 'ORCID',
+            'schemeURI': 'http://orcid.org/'}],
+        'creators': [{
+            'affiliation': 'DataCite',
+            'creatorName': 'Miller, Elizabeth',
+            'nameIdentifier': '0000-0001-5000-0007',
+            'nameIdentifierScheme': 'ORCID',
+            'schemeURI': 'http://orcid.org/'}],
+        'dates': [{'date': '2014-10-17', 'dateType': 'Updated'}],
+        'description': [{
+            'description': 'XML example of all DataCite '
+                           'Metadata Schema v3.1 properties.',
+            'descriptionType': 'Abstract'}],
+        'errors': [],
+        'formats': ['application/xml'],
+        'geoLocations': [{
+            'geoLocationBox': '41.090 -71.032  42.893 -68.211',
+            'geoLocationPlace': 'Atlantic Ocean',
+            'geoLocationPoint': '31.233 -67.302'}],
+        'identifier': {
+            'identifier': '10.5072/example-full', 'identifierType': 'DOI'},
+        'language': 'en-us',
+        'publicationYear': '2014',
+        'publisher': 'DataCite',
+        'relatedIdentifiers': [{
+            'relatedIdentifier': 'http://data.datacite.org/application/citeproc+json/10.5072/example-full',
+            'relatedIdentifierType': 'URL',
+            'relatedMetadataScheme': 'citeproc+json',
+            'relatedType': 'IsMetadataFor',
+            'relationType': 'HasMetadata',
+            'schemeType': '',
+            'schemeURI': 'https://github.com/citation-style-language/schema/raw/master/csl-data.json'},
+            {
+            'relatedIdentifier': 'arXiv:0706.0001',
+            'relatedIdentifierType': 'arXiv',
+            'relatedMetadataScheme': '',
+            'relatedType': 'IsMetadataFor',
+            'relationType': 'IsReviewedBy',
+            'schemeType': '',
+            'schemeURI': ''}],
+        'resourceType': 'XML',
+        'resourceTypeGeneral': 'Software',
+        'rights': [{
+            'rights': 'CC0 1.0 Universal',
+            'rightsURI': 'http://creativecommons.org/publicdomain/zero/1.0/'}],
+        'schemaSpecific': {},
+        'sizes': ['3KB', '25ml'],
+        'subjects': [{
+            'schemeURI': 'http://dewey.info/',
+            'subject': '000 computer science',
+            'subjectScheme': 'dewey'}],
+        'subtitle': '',
+        'title': 'Full DataCite XML Example',
+        'titles': [
+            {'title': 'Full DataCite XML Example', 'titleType': ''},
+            {'title': 'Demonstration of DataCite Properties.',
+             'titleType': 'Subtitle'}],
+        'version': '3.1',
+        'xsiSchema': 'http://datacite.org/schema/kernel-3 '
+                     'http://schema.datacite.org/meta/kernel-3/metadata.xsd'
+    },
+    {
         "subtitle": "",
         "contributors": [],
         "userId": "",
@@ -72,11 +154,11 @@ JSON_DICTS = [
         "publisher": "UCT",
         "dates": [
             {
-                "date": "",
+                "date": "2017-01-22",
                 "dateType": "Accepted"
             },
             {
-                "date": "",
+                "date": "2017-02-03",
                 "dateType": "Issued"
             }
         ],
@@ -94,8 +176,11 @@ JSON_DICTS = [
         "alternateIdentifiers": [],
         "titles": [
             {
-                "titleType": "",
                 "title": "Soil Organic Carbon Unperturbed (gC/sq.m)"
+            },
+            {
+                "titleType": "AlternativeTitle",
+                "title": "Carbon Unperturbed (gC/sq.m)"
             }
         ],
         "identifier": {
@@ -111,8 +196,8 @@ JSON_DICTS = [
         "owner": "",
         "subjects": [
             {
-                "subjectScheme": "",
-                "schemeURI": "",
+                "subjectScheme": "Dewey",
+                "schemeURI": "http://dewey.info/",
                 "subject": "SOC"
             },
             {
@@ -150,11 +235,11 @@ JSON_DICTS = [
         "publisher": "UCT",
         "dates": [
             {
-                "date": "",
+                "date": "2017-01-22",
                 "dateType": "Accepted"
             },
             {
-                "date": "",
+                "date": "2017-02-03",
                 "dateType": "Issued"
             }
         ],
@@ -180,7 +265,7 @@ JSON_DICTS = [
             "identifier": "12345/XYZ",
             "identifierType": "DOI"
         }
-    }
+    },
 ]
 
 if __name__ == "__main__":
