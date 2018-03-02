@@ -27,16 +27,17 @@ def get_record(root, request_element, **kwargs):
             # ignore
             continue
         request_element.set(k, kwargs[k])
+        if k == 'metadataPrefix':
+            # ignore
+            continue
         if k == 'identifier':
             key = 'record.identifier.identifier'
-        elif k == 'metadataPrefix':
-            # TODO
-            pass
         else:
             # TODO
             raise RuntimeError('get_record: unknown param {}'.format(k))
         q_item = Q({"match": {key: kwargs[k]}})
         q_list.append(q_item)
+
     if q_list:
         qry = {'bool': {'must': q_list}}
         print('GetRecord Query: {}'.format(qry))
@@ -45,6 +46,44 @@ def get_record(root, request_element, **kwargs):
     records = [r for r in s.scan()]
     print('Found {} records'.format(len(records)))
     return format_response(root, records)
+
+
+def identity(root, repositoryName, baseURL, protocolVersion, adminEmail,
+        earliestDatestamp, deletedRecord, granularity, compressions,
+        scheme, repositoryIdentifier, delimiter, sampleIdentifier):
+    child = ET.SubElement(root, 'Identity')
+    child = ET.SubElement(root, 'repositoryName')
+    child.text = repositoryName
+    child = ET.SubElement(root, 'baseURL')
+    child.text = baseURL
+    child = ET.SubElement(root, 'protocolVersion')
+    child.text = protocolVersion
+    child = ET.SubElement(root, 'adminEmail')
+    child.text = adminEmail
+    child = ET.SubElement(root, 'earliestDatestamp')
+    child.text = earliestDatestamp
+    child = ET.SubElement(root, 'deletedRecord')
+    child.text = deletedRecord
+    child = ET.SubElement(root, 'granularity')
+    child.text = granularity
+    for compression in compressions:
+        child = ET.SubElement(root, 'compression')
+        child.text = compression
+    desc = ET.SubElement(root, 'description')
+    oai_id = ET.SubElement(desc, 'oai-identifier', {
+        'xmlns': "http://www.openarchives.org/OAI/2.0/oai-identifier",
+        'xmlns:xsi': "http://www.w3.org/2001/XMLSchema-instance",
+        'xsi:schemaLocation': "http://www.openarchives.org/OAI/2.0/oai-identifier http://www.openarchives.org/OAI/2.0/oai-identifier.xsd"})
+    child = ET.SubElement(desc, 'scheme')
+    child.text = scheme
+    child = ET.SubElement(oai_id, 'repositoryIdentifier')
+    child.text = repositoryIdentifier
+    child = ET.SubElement(oai_id, 'delimiter')
+    child.text = delimiter
+    child = ET.SubElement(oai_id, 'delimiter')
+    child.text = delimiter
+    child = ET.SubElement(oai_id, 'sampleIdentifier')
+    child.text = sampleIdentifier
 
 
 def process_request(request_base, query_string, **kwargs):
@@ -56,24 +95,57 @@ def process_request(request_base, query_string, **kwargs):
 
     child = ET.SubElement(root, 'responseDate')
     child.text = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    verb = kwargs.get('verb', '')
     request_element = ET.SubElement(root, 'request')
     request_element.text = request_base
 
     # Ensure verb is provided
+    verb = kwargs.get('verb', '')
     if verb is None or len(verb) == 0:
         child = ET.SubElement(root, 'error', {'code': 'badArgument'})
         child.text = 'argument "verb" not found'
         return ET.tostring(root)
 
     # Ensure verb can be handled
-    if verb not in ['GetRecord', ]:
+    if verb not in ['GetRecord', 'Identity']:
         child = ET.SubElement(root, 'error', {'code': 'badVerb'})
         child.text = 'verb "{}" cannot be processed'.format(verb)
         return ET.tostring(root)
 
     request_element.set('verb', verb)
     if verb == 'GetRecord':
+        # Ensure metadataPrefix is provided
+        metadataPrefix = kwargs.get('metadataPrefix', '')
+        if metadataPrefix is None or len(metadataPrefix) == 0:
+            child = ET.SubElement(root, 'error', {'code': 'badArgument'})
+            child.text = 'argument "metadataPrefix" not found'
+            return ET.tostring(root)
+
+        # Ensure metadataPrefix can be handled
+        if metadataPrefix not in ['datacite', ]:
+            child = ET.SubElement(root, 'error', {'code': 'badArgument'})
+            child.text = 'metadataPrefix "{}" cannot be processed'.format(
+                metadataPrefix)
+            return ET.tostring(root)
+
         get_record(root, request_element, **kwargs)
+
+    elif verb == 'Identity':
+        repositoryName = 'SAEON'
+        baseURL = 'http://oai.saeon.ac.za'
+        protocolVersion = '2'
+        adminEmail = 'info@saeon.ac.za'
+        earliestDatestamp = '2011-01-01T00:00:00Z'
+        deletedRecord = 'persistent'
+        granularity = 'YYYY-MM-DDThh:mm:ssZ'
+        compressions = ['gzip', 'deflate']
+        scheme = 'oai'
+        repositoryIdentifier = 'oai.saeon.ac.za'
+        delimiter = ':'
+        sampleIdentifier = 'oai:oai.datacite.org:12425'
+
+        identity(root, repositoryName, baseURL, protocolVersion,
+                adminEmail, earliestDatestamp, deletedRecord,
+                granularity, compressions, scheme, repositoryIdentifier,
+                delimiter, sampleIdentifier)
 
     return ET.tostring(root)
