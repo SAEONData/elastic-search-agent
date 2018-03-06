@@ -1,4 +1,3 @@
-from agent.config import index_name
 from agent.config import repositoryName
 from agent.config import baseURL
 from agent.config import protocolVersion
@@ -11,10 +10,9 @@ from agent.config import scheme
 from agent.config import repositoryIdentifier
 from agent.config import delimiter
 from agent.config import sampleIdentifier
+from agent.search import search
 from agent.datacite_export import generateXML
 from datetime import datetime
-from elasticsearch_dsl import Search
-from elasticsearch_dsl import Q
 import xml.etree.ElementTree as ET
 
 
@@ -32,8 +30,8 @@ def format_response(root, records):
 
 
 def get_record(root, request_element, **kwargs):
-    s = Search(index=index_name)
-    q_list = []
+    # s = Search(index=index_name)
+    query = {}
     for k in kwargs:
         if k == 'verb':
             # ignore
@@ -47,15 +45,10 @@ def get_record(root, request_element, **kwargs):
         else:
             # TODO
             raise RuntimeError('get_record: unknown param {}'.format(k))
-        q_item = Q({"match": {key: kwargs[k]}})
-        q_list.append(q_item)
+        query[key] = kwargs[k]
 
-    if q_list:
-        qry = {'bool': {'must': q_list}}
-        print('GetRecord Query: {}'.format(qry))
-        s.query = qry
-
-    records = [r for r in s.scan()]
+    records = search(**query)
+    records = [r for r in records]
     print('Found {} records'.format(len(records)))
     return format_response(root, records)
 
