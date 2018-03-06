@@ -1,4 +1,16 @@
 from agent.config import index_name
+from agent.config import repositoryName
+from agent.config import baseURL
+from agent.config import protocolVersion
+from agent.config import adminEmail
+from agent.config import earliestDatestamp
+from agent.config import deletedRecord
+from agent.config import granularity
+from agent.config import compressions
+from agent.config import scheme
+from agent.config import repositoryIdentifier
+from agent.config import delimiter
+from agent.config import sampleIdentifier
 from agent.datacite_export import generateXML
 from datetime import datetime
 from elasticsearch_dsl import Search
@@ -49,8 +61,8 @@ def get_record(root, request_element, **kwargs):
 
 
 def identity(root, repositoryName, baseURL, protocolVersion, adminEmail,
-        earliestDatestamp, deletedRecord, granularity, compressions,
-        scheme, repositoryIdentifier, delimiter, sampleIdentifier):
+             earliestDatestamp, deletedRecord, granularity, compressions,
+             scheme, repositoryIdentifier, delimiter, sampleIdentifier):
     child = ET.SubElement(root, 'Identity')
     child = ET.SubElement(root, 'repositoryName')
     child.text = repositoryName
@@ -78,8 +90,6 @@ def identity(root, repositoryName, baseURL, protocolVersion, adminEmail,
     child.text = scheme
     child = ET.SubElement(oai_id, 'repositoryIdentifier')
     child.text = repositoryIdentifier
-    child = ET.SubElement(oai_id, 'delimiter')
-    child.text = delimiter
     child = ET.SubElement(oai_id, 'delimiter')
     child.text = delimiter
     child = ET.SubElement(oai_id, 'sampleIdentifier')
@@ -130,22 +140,10 @@ def process_request(request_base, query_string, **kwargs):
         get_record(root, request_element, **kwargs)
 
     elif verb == 'Identity':
-        repositoryName = 'SAEON'
-        baseURL = 'http://oai.saeon.ac.za'
-        protocolVersion = '2'
-        adminEmail = 'info@saeon.ac.za'
-        earliestDatestamp = '2011-01-01T00:00:00Z'
-        deletedRecord = 'persistent'
-        granularity = 'YYYY-MM-DDThh:mm:ssZ'
-        compressions = ['gzip', 'deflate']
-        scheme = 'oai'
-        repositoryIdentifier = 'oai.saeon.ac.za'
-        delimiter = ':'
-        sampleIdentifier = 'oai:oai.datacite.org:12425'
 
         identity(root, repositoryName, baseURL, protocolVersion,
-                adminEmail, earliestDatestamp, deletedRecord,
-                granularity, compressions, scheme, repositoryIdentifier,
-                delimiter, sampleIdentifier)
+                 adminEmail, earliestDatestamp, deletedRecord,
+                 granularity, compressions, scheme, repositoryIdentifier,
+                 delimiter, sampleIdentifier)
 
     return ET.tostring(root)
