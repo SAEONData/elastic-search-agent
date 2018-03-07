@@ -11,34 +11,40 @@ from agent.config import repositoryIdentifier
 from agent.config import delimiter
 from agent.config import sampleIdentifier
 from agent.search import search
-from agent.datacite_export import generateXML
+from agent.datacite_export import generateXMLDataCite
+from agent.dc_export import generateXMLDC
 from datetime import datetime
 import xml.etree.ElementTree as ET
 
 
-def format_response(root, records):
+def format_response(root, records, prefix):
     if records:
         e_getrecord = ET.SubElement(root, 'GetRecord')
 
         for record in records:
             e_record = ET.SubElement(e_getrecord, "record")
             try:
-                generateXML(e_record, record.to_dict().get('record'))
+                if prefix == 'datacite':
+                    generateXMLDataCite(
+                        e_record, record.to_dict().get('record'))
+                elif prefix == 'oai_dc':
+                    generateXMLDC(
+                        e_record, record.to_dict().get('record'))
             except AttributeError as e:
                 print('AttributeError: {}'.format(e))
     return
 
 
 def get_record(root, request_element, **kwargs):
-    # s = Search(index=index_name)
     query = {}
+    prefix = 'datacite'
     for k in kwargs:
         if k == 'verb':
             # ignore
             continue
         request_element.set(k, kwargs[k])
         if k == 'metadataPrefix':
-            # ignore
+            prefix = kwargs[k]
             continue
         if k == 'identifier':
             key = 'record.identifier.identifier'
@@ -50,7 +56,7 @@ def get_record(root, request_element, **kwargs):
     records = search(**query)
     records = [r for r in records]
     print('Found {} records'.format(len(records)))
-    return format_response(root, records)
+    return format_response(root, records, prefix)
 
 
 def identity(root, repositoryName, baseURL, protocolVersion, adminEmail,
@@ -124,7 +130,7 @@ def process_request(request_base, query_string, **kwargs):
             return ET.tostring(root)
 
         # Ensure metadataPrefix can be handled
-        if metadataPrefix not in ['datacite', ]:
+        if metadataPrefix not in ['datacite', 'oai_dc']:
             child = ET.SubElement(root, 'error', {'code': 'badArgument'})
             child.text = 'metadataPrefix "{}" cannot be processed'.format(
                 metadataPrefix)

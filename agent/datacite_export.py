@@ -1,7 +1,7 @@
 import xml.etree.ElementTree as ET
 
 
-def generateXML(root, jsonData):
+def generateXMLDataCite(root, jsonData):
 
     if jsonData.get('identifier', '') != '':
         child = ET.SubElement(root, 'identifier', {
