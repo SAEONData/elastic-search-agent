@@ -5,7 +5,7 @@ server_url = 'http://localhost:8080'
 
 # ES details
 es_port = 9200
-index_name = 'metadata16'
+index_name = 'metadata17'
 es_connection = connections.create_connection(
     hosts=['localhost:{}'.format(es_port)],
     timeout=20)

@@ -3,10 +3,11 @@ import requests
 from agent.config import server_url
 
 
-def add_a_metadata_record(data):
+def add_a_metadata_record(data, set_spec=''):
 
     data = {
-        'record': json.dumps(data)
+        'record': json.dumps(data),
+        'set_spec': set_spec
     }
     response = requests.post(
         url="{}/add".format(server_url),
@@ -22,7 +23,7 @@ def add_a_metadata_record(data):
 
 def add_metadata_records():
     for data in JSON_DICTS:
-        add_a_metadata_record(data)
+        add_a_metadata_record(data, set_spec='test102')
 
 
 JSON_DICTS = [

@@ -29,8 +29,7 @@ def import_metadata_records():
         records = import_metadata_record(path)
         records = json.loads(records)
         for record in records['content']:
-            add_a_metadata_record(record['jsonData'])
-            import pdb; pdb.set_trace()
+            add_a_metadata_record(record['jsonData'], set_spec='Import')
 
 
 if __name__ == "__main__":

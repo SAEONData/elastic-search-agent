@@ -59,13 +59,15 @@ def get_record(root, request_element, **kwargs):
     return format_records(root, records, prefix)
 
 
-def format_identifiers(root, records, prefix, set_spec):
+def format_identifiers(root, records, prefix):
     if records:
         e_identiers = ET.SubElement(root, 'ListIdentifiers')
 
         for record in records:
+            set_spec = ''
             e_header = ET.SubElement(e_identiers, "header")
             try:
+                set_spec = record.set_spec
                 record = record.to_dict().get('record')
                 if record.get('identifier', '') != '':
                     child = ET.SubElement(e_header, 'identifier')
@@ -82,8 +84,9 @@ def format_identifiers(root, records, prefix, set_spec):
                             child.text = date
                             break
 
-                child = ET.SubElement(e_header, 'setSpec')
-                child.text = set_spec
+                if set_spec:
+                    child = ET.SubElement(e_header, 'setSpec')
+                    child.text = set_spec
             except AttributeError as e:
                 print('AttributeError: {}'.format(e))
     return
@@ -101,17 +104,16 @@ def list_identifiers(root, request_element, **kwargs):
             prefix = kwargs[k]
             continue
         if k == 'set':
-            set_spec = kwargs[k]
-            continue
+            query['set_spec'] = kwargs[k]
         else:
             # TODO
             raise RuntimeError('list_identifiers: unknown param {}'.format(k))
-        query[key] = kwargs[k]
 
+    print('list_identifiers query: {}'.format(query))
     records = search(**query)
     records = [r for r in records]
     print('Found {} records'.format(len(records)))
-    return format_identifiers(root, records, prefix, set_spec)
+    return format_identifiers(root, records, prefix)
 
 
 def identity(root, repositoryName, baseURL, protocolVersion, adminEmail,

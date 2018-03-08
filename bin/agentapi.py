@@ -30,6 +30,8 @@ class AgentAPI(object):
             output['msg'] = msg
             return output
 
+        set_spec = kwargs.get('set_spec', '')
+
         # Hacks to fix records
         identifier = record.get('identifier')
         if identifier == '':
@@ -37,7 +39,7 @@ class AgentAPI(object):
 
         Metadata.init()
         try:
-            md = Metadata(record=record)
+            md = Metadata(record=record, set_spec=set_spec)
         except Exception as e:
             msg = "Error: {}: {}".format('Creation failed', e)
             output['msg'] = msg
