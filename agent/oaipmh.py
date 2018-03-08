@@ -17,7 +17,7 @@ from datetime import datetime
 import xml.etree.ElementTree as ET
 
 
-def format_response(root, records, prefix):
+def format_records(root, records, prefix):
     if records:
         e_getrecord = ET.SubElement(root, 'GetRecord')
 
@@ -56,7 +56,62 @@ def get_record(root, request_element, **kwargs):
     records = search(**query)
     records = [r for r in records]
     print('Found {} records'.format(len(records)))
-    return format_response(root, records, prefix)
+    return format_records(root, records, prefix)
+
+
+def format_identifiers(root, records, prefix, set_spec):
+    if records:
+        e_identiers = ET.SubElement(root, 'ListIdentifiers')
+
+        for record in records:
+            e_header = ET.SubElement(e_identiers, "header")
+            try:
+                record = record.to_dict().get('record')
+                if record.get('identifier', '') != '':
+                    child = ET.SubElement(e_header, 'identifier')
+                    child.text = record['identifier']['identifier']
+
+                date = None
+                lstDates = record.get('dates', [])
+                if len(lstDates) > 0:
+                    for dte in lstDates:
+                        date = dte['date']
+                        if date:
+                            # Use the first date
+                            child = ET.SubElement(e_header, 'datestamp')
+                            child.text = date
+                            break
+
+                child = ET.SubElement(e_header, 'setSpec')
+                child.text = set_spec
+            except AttributeError as e:
+                print('AttributeError: {}'.format(e))
+    return
+
+
+def list_identifiers(root, request_element, **kwargs):
+    query = {}
+    prefix = 'datacite'
+    for k in kwargs:
+        if k == 'verb':
+            # ignore
+            continue
+        request_element.set(k, kwargs[k])
+        if k == 'metadataPrefix':
+            prefix = kwargs[k]
+            continue
+        if k == 'set':
+            set_spec = kwargs[k]
+            continue
+        else:
+            # TODO
+            raise RuntimeError('list_identifiers: unknown param {}'.format(k))
+        query[key] = kwargs[k]
+
+    records = search(**query)
+    records = [r for r in records]
+    print('Found {} records'.format(len(records)))
+    return format_identifiers(root, records, prefix, set_spec)
 
 
 def identity(root, repositoryName, baseURL, protocolVersion, adminEmail,
@@ -115,7 +170,7 @@ def process_request(request_base, query_string, **kwargs):
         return ET.tostring(root)
 
     # Ensure verb can be handled
-    if verb not in ['GetRecord', 'Identity']:
+    if verb not in ['GetRecord', 'Identity', 'ListIdentifiers']:
         child = ET.SubElement(root, 'error', {'code': 'badVerb'})
         child.text = 'verb "{}" cannot be processed'.format(verb)
         return ET.tostring(root)
@@ -137,6 +192,23 @@ def process_request(request_base, query_string, **kwargs):
             return ET.tostring(root)
 
         get_record(root, request_element, **kwargs)
+
+    elif verb == 'ListIdentifiers':
+        # Ensure metadataPrefix is provided
+        metadataPrefix = kwargs.get('metadataPrefix', '')
+        if metadataPrefix is None or len(metadataPrefix) == 0:
+            child = ET.SubElement(root, 'error', {'code': 'badArgument'})
+            child.text = 'argument "metadataPrefix" not found'
+            return ET.tostring(root)
+
+        # Ensure metadataPrefix can be handled
+        if metadataPrefix not in ['datacite', 'oai_dc']:
+            child = ET.SubElement(root, 'error', {'code': 'badArgument'})
+            child.text = 'metadataPrefix "{}" cannot be processed'.format(
+                metadataPrefix)
+            return ET.tostring(root)
+
+        list_identifiers(root, request_element, **kwargs)
 
     elif verb == 'Identity':
 
