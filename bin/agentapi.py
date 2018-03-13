@@ -3,7 +3,8 @@
 import cherrypy
 import json
 from elasticsearch_dsl import Search
-from agent.config import index_name
+from agent.config import metadata_index_name
+from agent.config import token_index_name
 from agent.oaipmh import process_request
 from agent.persist import Metadata
 from agent.search import FacetedSearch
@@ -37,7 +38,7 @@ class AgentAPI(object):
         if identifier == '':
             record['identifier'] = {}
 
-        Metadata.init()
+        # Metadata.init()
         try:
             md = Metadata(record=record, set_spec=set_spec)
         except Exception as e:
@@ -60,7 +61,9 @@ class AgentAPI(object):
     def delete_all(self):
         output = {'success': False}
         cherrypy.log('delete_all')
-        s = Search(index=index_name)
+        s = Search(index=metadata_index_name)
+        s.delete()
+        s = Search(index=token_index_name)
         s.delete()
         output['success'] = True
         return output
@@ -79,6 +82,7 @@ class AgentAPI(object):
             response = search_all()
         lines = []
         for hit in response:
+            # lines.append(json.dumps(hit.to_dict(), default=str))
             lines.append(hit.to_dict())
 
         output['success'] = True

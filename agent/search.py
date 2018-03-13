@@ -1,19 +1,17 @@
 from elasticsearch_dsl import FacetedSearch
 from elasticsearch_dsl import TermsFacet
-from elasticsearch_dsl import Search
 from elasticsearch_dsl import Q
-from agent.config import index_name
 from agent.persist import Metadata
 
 
 def search_all():
-    s = Search(index=index_name)
+    s = Metadata.search()
     return s.scan()
 
 
 def search(**kwargs):
-    s = Search(index=index_name)
-    q_list = []
+    s = Metadata.search()
+    q_list = [Q({"match": {'content_type': 'Metadata'}}), ]
     fields = ''
     for k in kwargs:
         print('------------------------' + k)
@@ -23,11 +21,9 @@ def search(**kwargs):
         q_item = Q({"match": {k: kwargs[k]}})
         q_list.append(q_item)
     qry = {'bool': {'must': q_list}}
-    print('Search Query: {}'.format(qry))
+    # print('Search Query: {}'.format(qry))
     s.query = qry
 
-    # fields = [k for k in kwargs.keys()]
-    # fields = ['record.creators', ]
     if fields:
         new_fields = []
         for field in fields.split(' '):

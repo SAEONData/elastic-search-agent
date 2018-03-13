@@ -10,11 +10,29 @@ from agent.config import scheme
 from agent.config import repositoryIdentifier
 from agent.config import delimiter
 from agent.config import sampleIdentifier
-from agent.search import search
+from agent.persist import Metadata
+from agent.persist import ResumptionToken
 from agent.datacite_export import generateXMLDataCite
 from agent.dc_export import generateXMLDC
 from datetime import datetime
 import xml.etree.ElementTree as ET
+
+
+def add_resumption_token(size, cursor):
+    rs = ResumptionToken(md_size=size, md_cursor=cursor)
+    rs.save()
+    print('add_resumption_token: {} {} {}'.format(size, cursor, rs.md_token))
+    return rs.md_token
+
+
+def find_resumption_token(md_token):
+    srch = ResumptionToken.search()
+    srch = srch.query('match', md_token=md_token)
+    rs = srch.execute()
+    if len(rs.hits):
+        return rs.hits[0].md_cursor
+
+    return 0
 
 
 def format_records(root, records, prefix):
@@ -53,13 +71,13 @@ def get_record(root, request_element, **kwargs):
             raise RuntimeError('get_record: unknown param {}'.format(k))
         query[key] = kwargs[k]
 
-    records = search(**query)
+    records = Metadata.search(**query)
     records = [r for r in records]
     print('Found {} records'.format(len(records)))
     return format_records(root, records, prefix)
 
 
-def format_identifiers(root, records, prefix):
+def format_identifiers(root, records, prefix, md_token):
     if records:
         e_identiers = ET.SubElement(root, 'ListIdentifiers')
 
@@ -89,11 +107,16 @@ def format_identifiers(root, records, prefix):
                     child.text = set_spec
             except AttributeError as e:
                 print('AttributeError: {}'.format(e))
+
+    if md_token:
+        child = ET.SubElement(root, 'resumptionToken')
+        child.text = md_token
     return
 
 
 def list_identifiers(root, request_element, **kwargs):
     query = {}
+    md_token = None
     prefix = 'datacite'
     for k in kwargs:
         if k == 'verb':
@@ -105,15 +128,29 @@ def list_identifiers(root, request_element, **kwargs):
             continue
         if k == 'set':
             query['set_spec'] = kwargs[k]
+        if k == 'resumptionToken':
+            md_token = kwargs[k]
         else:
             # TODO
-            raise RuntimeError('list_identifiers: unknown param {}'.format(k))
+            raise RuntimeError(
+                'list_identifiers: unknown param {}'.format(k))
 
-    print('list_identifiers query: {}'.format(query))
-    records = search(**query)
+    # print('list_identifiers query: {}'.format(query))
+    md_cursor = 0
+    if md_token:
+        md_cursor = find_resumption_token(md_token)
+    end = md_cursor + 10
+    print('Cursor: {} - {}'.format(md_cursor, end))
+    srch = Metadata.search()
+    srch = srch.sort('record.identifier.identifier')
+    srch = srch[md_cursor:end]
+    records = srch.execute()
     records = [r for r in records]
-    print('Found {} records'.format(len(records)))
-    return format_identifiers(root, records, prefix)
+    # print(', '.join([r.doc_type for r in records]))
+    new_token = None
+    if len(records) == 10:
+        new_token = add_resumption_token(size=10, cursor=end)
+    return format_identifiers(root, records, prefix, new_token)
 
 
 def identity(root, repositoryName, baseURL, protocolVersion, adminEmail,
@@ -204,7 +241,7 @@ def process_request(request_base, query_string, **kwargs):
             return ET.tostring(root)
 
         # Ensure metadataPrefix can be handled
-        if metadataPrefix not in ['datacite', 'oai_dc']:
+        if metadataPrefix not in ['datacite', 'oai_dc', 'resumptionToken']:
             child = ET.SubElement(root, 'error', {'code': 'badArgument'})
             child.text = 'metadataPrefix "{}" cannot be processed'.format(
                 metadataPrefix)

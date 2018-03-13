@@ -1,10 +1,12 @@
 from agent.config import es_connection
-from agent.config import index_name
+from agent.config import metadata_index_name
+from agent.config import token_index_name
 from datetime import datetime
 from elasticsearch_dsl import analyzer
 from elasticsearch_dsl import Date
 from elasticsearch_dsl import DocType
 from elasticsearch_dsl import Keyword
+from elasticsearch_dsl import Integer
 from elasticsearch_dsl import MetaField
 from elasticsearch_dsl import Object
 from elasticsearch_dsl import Text
@@ -24,7 +26,7 @@ class Metadata(DocType):
     record = Object()
 
     class Meta:
-        index = index_name
+        index = metadata_index_name
         using = es_connection
         dynamic_templates = MetaField([
             {
@@ -38,5 +40,20 @@ class Metadata(DocType):
         ])
 
     def save(self, **kwargs):
+        # self.created_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S %f")
         self.created_at = datetime.now()
+        return super().save(**kwargs)
+
+
+class ResumptionToken(DocType):
+    md_token = Text()
+    md_size = Integer()
+    md_cursor = Integer()
+
+    class Meta:
+        index = token_index_name
+        using = es_connection
+
+    def save(self, **kwargs):
+        self.md_token = datetime.now().strftime("%Y%m%d%H%M%S%f")
         return super().save(**kwargs)

@@ -1,6 +1,7 @@
 import json
 import requests
 from agent.config import server_url
+from datetime import datetime
 
 
 def add_a_metadata_record(data, set_spec=''):
@@ -21,9 +22,18 @@ def add_a_metadata_record(data, set_spec=''):
     return response.text
 
 
-def add_metadata_records():
-    for data in JSON_DICTS:
-        add_a_metadata_record(data, set_spec='test102')
+def gen_unique_id():
+    return datetime.now().strftime("%Y%m%d%H%M%S%f")
+
+
+def add_metadata_records(repeats=1):
+    cnt = 0
+    for rep in range(repeats):
+        for data in JSON_DICTS:
+            cnt += 1
+            print('Add record {}'.format(cnt))
+            data['identifier']['identifier'] = gen_unique_id()
+            add_a_metadata_record(data, set_spec='test102')
 
 
 JSON_DICTS = [
@@ -270,4 +280,4 @@ JSON_DICTS = [
 ]
 
 if __name__ == "__main__":
-    add_metadata_records()
+    add_metadata_records(10)
