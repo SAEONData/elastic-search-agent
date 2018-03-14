@@ -33,8 +33,6 @@ def find_resumption_token(md_token):
     if len(rs.hits):
         return rs.hits[0].md_cursor
 
-    return 0
-
 
 def format_records(root, records, prefix, md_token):
     if records:
@@ -146,27 +144,26 @@ def list_results(root, request_element, form, **kwargs):
         elif k == 'resumptionToken':
             md_token = kwargs[k]
         else:
-            # TODO
-            raise RuntimeError(
-                'list_results: unknown param {}'.format(k))
+            child = ET.SubElement(root, 'error', {'code': 'badArgument'})
+            child.text = 'Unknown argument "{}"'.format(k)
+            return
 
     # Ensure metadataPrefix is provided
     if prefix is None or len(prefix) == 0:
         child = ET.SubElement(root, 'error', {'code': 'badArgument'})
-        child.text = 'argument "metadataPrefix" not found'
-        return ET.tostring(root)
+        child.text = 'argument "metadataPrefix" is required'
+        return
 
     # Ensure metadataPrefix can be handled
     if prefix not in ['datacite', 'oai_dc', 'resumptionToken']:
         child = ET.SubElement(root, 'error', {'code': 'badArgument'})
-        child.text = 'metadataPrefix "{}" cannot be processed'.format(
-            prefix)
-        return ET.tostring(root)
+        child.text = 'metadataPrefix "{}" cannot be processed'.format(prefix)
+        return
 
     md_cursor = 0
     if md_token:
         md_cursor = find_resumption_token(md_token)
-        if md_cursor == 0:
+        if md_cursor is None:
             ET.SubElement(root, 'error', {'code': 'badResumptionToken'})
             return
 
