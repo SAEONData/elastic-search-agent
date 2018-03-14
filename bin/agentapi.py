@@ -4,6 +4,7 @@ import cherrypy
 import json
 from elasticsearch_dsl import Search
 from agent.config import metadata_index_name
+from agent.config import server_port
 from agent.config import token_index_name
 from agent.oaipmh import process_request
 from agent.persist import Metadata
@@ -129,5 +130,5 @@ class AgentAPI(object):
 
 
 if __name__ == '__main__':
-    cherrypy.config.update({'server.socket_port': 8080})
+    cherrypy.config.update({'server.socket_port': server_port})
     cherrypy.quickstart(AgentAPI(), '/')

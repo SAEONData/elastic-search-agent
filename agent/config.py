@@ -1,12 +1,13 @@
 from elasticsearch_dsl import connections
 
 # CherryPy testng details
-server_url = 'http://localhost:8080'
+server_port = 9210
+server_url = 'http://localhost:{}'.format(server_port)
 
 # ES details
 es_port = 9200
-metadata_index_name = 'md_index_4'
-token_index_name = 'rt_index_4'
+metadata_index_name = 'md_index_1'
+token_index_name = 'rt_index_1'
 es_connection = connections.create_connection(
     hosts=['localhost:{}'.format(es_port)],
     timeout=20)
