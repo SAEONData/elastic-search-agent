@@ -74,7 +74,7 @@ def get_record(root, request_element, **kwargs):
         # Ensure identifier is provided
         child = ET.SubElement(root, 'error', {'code': 'badArgument'})
         child.text = 'argument "identifier" not found'
-        return ET.tostring(root)
+        return
 
     # print('Search for query {}'.format(qry))
     srch = Metadata.search()
@@ -84,7 +84,8 @@ def get_record(root, request_element, **kwargs):
     if len(records) == 0:
         child = ET.SubElement(root, 'error', {'code': 'idDoesNotExist'})
         child.text = 'Not matching identifier'
-        return ET.tostring(root)
+        return
+
     # print('Found {} records'.format(len(records)))
     return format_records(root, records, prefix)
 
@@ -151,6 +152,10 @@ def list_identifiers(root, request_element, **kwargs):
     md_cursor = 0
     if md_token:
         md_cursor = find_resumption_token(md_token)
+        if md_cursor == 0:
+            ET.SubElement(root, 'error', {'code': 'badResumptionToken'})
+            return
+
     end = md_cursor + 10
     print('Cursor: {} - {}'.format(md_cursor, end))
     srch = Metadata.search()
