@@ -131,9 +131,9 @@ def format_identifiers(root, records, prefix, md_token):
 
 
 def list_results(root, request_element, form, **kwargs):
-    query = {}
     md_token = None
     prefix = 'datacite'
+    q_list = []
     for k in kwargs:
         if k == 'verb':
             # ignore
@@ -141,10 +141,9 @@ def list_results(root, request_element, form, **kwargs):
         request_element.set(k, kwargs[k])
         if k == 'metadataPrefix':
             prefix = kwargs[k]
-            continue
-        if k == 'set':
-            query['set_spec'] = kwargs[k]
-        if k == 'resumptionToken':
+        elif k == 'set':
+            q_list.append(Q({"match": {'set_spec': kwargs[k]}}))
+        elif k == 'resumptionToken':
             md_token = kwargs[k]
         else:
             # TODO
@@ -164,7 +163,6 @@ def list_results(root, request_element, form, **kwargs):
             prefix)
         return ET.tostring(root)
 
-    # print('list_results query: {}'.format(query))
     md_cursor = 0
     if md_token:
         md_cursor = find_resumption_token(md_token)
@@ -175,6 +173,7 @@ def list_results(root, request_element, form, **kwargs):
     end = md_cursor + 10
     print('Cursor: {} - {}'.format(md_cursor, end))
     srch = Metadata.search()
+    srch.query = {'bool': {'must': q_list}}
     srch = srch.sort('record.identifier.identifier')
     srch = srch[md_cursor:end]
     records = srch.execute()
