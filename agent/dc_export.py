@@ -3,21 +3,6 @@ import xml.etree.ElementTree as ET
 
 def generateXMLDC(root, jsonData):
 
-    header = ET.SubElement(root, 'header')
-    if jsonData.get('identifier', '') != '':
-        child = ET.SubElement(header, 'identifier')
-        child.text = jsonData['identifier']['identifier']
-    date = None
-    lstDates = jsonData.get('dates', [])
-    if len(lstDates) > 0:
-        for dte in lstDates:
-            date = dte['date']
-            if date:
-                # Use the first date
-                child = ET.SubElement(header, 'datestamp')
-                child.text = date
-                break
-
     metadata = ET.SubElement(root, 'metadata')
     oai_dc = ET.SubElement(metadata, 'oai_dc:dc', {
         'xmlns:oai_dc': "http://www.openarchives.org/OAI/2.0/oai_dc/",

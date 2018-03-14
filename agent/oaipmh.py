@@ -34,19 +34,42 @@ def find_resumption_token(md_token):
         return rs.hits[0].md_cursor
 
 
+def format_identifier(root, record):
+    set_spec = ''
+    el_header = ET.SubElement(root, "header")
+    try:
+        set_spec = record.set_spec
+        record = record.to_dict().get('record')
+        if record.get('identifier', '') != '':
+            child = ET.SubElement(el_header, 'identifier')
+            child.text = record['identifier']['identifier']
+
+        date = record.get('publicationYear', None)
+        if date:
+            child = ET.SubElement(el_header, 'datestamp')
+            child.text = date
+
+        if set_spec:
+            child = ET.SubElement(el_header, 'setSpec')
+            child.text = set_spec
+    except AttributeError as e:
+        raise RuntimeError('AttributeError: {}'.format(e))
+
+
 def format_records(root, records, prefix, md_token):
     if records:
-        e_getrecord = ET.SubElement(root, 'GetRecord')
+        el_getrecord = ET.SubElement(root, 'GetRecord')
 
         for record in records:
-            e_record = ET.SubElement(e_getrecord, "record")
+            el_record = ET.SubElement(el_getrecord, "record")
+            format_identifier(el_record, record)
             try:
                 if prefix == 'datacite':
                     generateXMLDataCite(
-                        e_record, record.to_dict().get('record'))
+                        el_record, record.to_dict().get('record'))
                 elif prefix == 'oai_dc':
                     generateXMLDC(
-                        e_record, record.to_dict().get('record'))
+                        el_record, record.to_dict().get('record'))
             except AttributeError as e:
                 print('AttributeError: {}'.format(e))
     if md_token:
@@ -93,34 +116,10 @@ def get_record(root, request_element, **kwargs):
 
 def format_identifiers(root, records, prefix, md_token):
     if records:
-        e_identiers = ET.SubElement(root, 'ListIdentifiers')
+        el_identifiers = ET.SubElement(root, 'ListIdentifiers')
 
         for record in records:
-            set_spec = ''
-            e_header = ET.SubElement(e_identiers, "header")
-            try:
-                set_spec = record.set_spec
-                record = record.to_dict().get('record')
-                if record.get('identifier', '') != '':
-                    child = ET.SubElement(e_header, 'identifier')
-                    child.text = record['identifier']['identifier']
-
-                date = None
-                lstDates = record.get('dates', [])
-                if len(lstDates) > 0:
-                    for dte in lstDates:
-                        date = dte['date']
-                        if date:
-                            # Use the first date
-                            child = ET.SubElement(e_header, 'datestamp')
-                            child.text = date
-                            break
-
-                if set_spec:
-                    child = ET.SubElement(e_header, 'setSpec')
-                    child.text = set_spec
-            except AttributeError as e:
-                print('AttributeError: {}'.format(e))
+            format_identifier(el_identifiers, record)
 
     if md_token:
         child = ET.SubElement(root, 'resumptionToken')
