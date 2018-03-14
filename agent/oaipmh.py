@@ -36,7 +36,7 @@ def find_resumption_token(md_token):
     return 0
 
 
-def format_records(root, records, prefix):
+def format_records(root, records, prefix, md_token):
     if records:
         e_getrecord = ET.SubElement(root, 'GetRecord')
 
@@ -51,6 +51,9 @@ def format_records(root, records, prefix):
                         e_record, record.to_dict().get('record'))
             except AttributeError as e:
                 print('AttributeError: {}'.format(e))
+    if md_token:
+        child = ET.SubElement(root, 'resumptionToken')
+        child.text = md_token
     return
 
 
@@ -127,7 +130,7 @@ def format_identifiers(root, records, prefix, md_token):
     return
 
 
-def list_identifiers(root, request_element, **kwargs):
+def list_results(root, request_element, form, **kwargs):
     query = {}
     md_token = None
     prefix = 'datacite'
@@ -146,9 +149,9 @@ def list_identifiers(root, request_element, **kwargs):
         else:
             # TODO
             raise RuntimeError(
-                'list_identifiers: unknown param {}'.format(k))
+                'list_results: unknown param {}'.format(k))
 
-    # print('list_identifiers query: {}'.format(query))
+    # print('list_results query: {}'.format(query))
     md_cursor = 0
     if md_token:
         md_cursor = find_resumption_token(md_token)
@@ -167,7 +170,12 @@ def list_identifiers(root, request_element, **kwargs):
     new_token = None
     if len(records) == 10:
         new_token = add_resumption_token(size=10, cursor=end)
-    return format_identifiers(root, records, prefix, new_token)
+    if form == 'records':
+        return format_records(root, records, prefix, new_token)
+    elif form == 'identifiers':
+        return format_identifiers(root, records, prefix, new_token)
+    else:
+        raise RuntimeError('list_results: unknown param {}'.format(k))
 
 
 def identity(root, repositoryName, baseURL, protocolVersion, adminEmail,
@@ -226,7 +234,7 @@ def process_request(request_base, query_string, **kwargs):
         return ET.tostring(root)
 
     # Ensure verb can be handled
-    if verb not in ['GetRecord', 'Identity', 'ListIdentifiers']:
+    if verb not in ['GetRecord', 'Identity', 'ListIdentifiers', 'ListRecords']:
         child = ET.SubElement(root, 'error', {'code': 'badVerb'})
         child.text = 'verb "{}" cannot be processed'.format(verb)
         return ET.tostring(root)
@@ -248,6 +256,23 @@ def process_request(request_base, query_string, **kwargs):
 
         get_record(root, request_element, **kwargs)
 
+    elif verb == 'ListRecords':
+        # Ensure metadataPrefix is provided
+        metadataPrefix = kwargs.get('metadataPrefix', '')
+        if metadataPrefix is None or len(metadataPrefix) == 0:
+            child = ET.SubElement(root, 'error', {'code': 'badArgument'})
+            child.text = 'argument "metadataPrefix" not found'
+            return ET.tostring(root)
+
+        # Ensure metadataPrefix can be handled
+        if metadataPrefix not in ['datacite', 'oai_dc', 'resumptionToken']:
+            child = ET.SubElement(root, 'error', {'code': 'badArgument'})
+            child.text = 'metadataPrefix "{}" cannot be processed'.format(
+                metadataPrefix)
+            return ET.tostring(root)
+
+        list_results(root, request_element, 'records', **kwargs)
+
     elif verb == 'ListIdentifiers':
         # Ensure metadataPrefix is provided
         metadataPrefix = kwargs.get('metadataPrefix', '')
@@ -263,7 +288,7 @@ def process_request(request_base, query_string, **kwargs):
                 metadataPrefix)
             return ET.tostring(root)
 
-        list_identifiers(root, request_element, **kwargs)
+        list_results(root, request_element, 'identifiers', **kwargs)
 
     elif verb == 'Identity':
 
