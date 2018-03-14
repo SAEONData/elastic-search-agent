@@ -151,6 +151,19 @@ def list_results(root, request_element, form, **kwargs):
             raise RuntimeError(
                 'list_results: unknown param {}'.format(k))
 
+    # Ensure metadataPrefix is provided
+    if prefix is None or len(prefix) == 0:
+        child = ET.SubElement(root, 'error', {'code': 'badArgument'})
+        child.text = 'argument "metadataPrefix" not found'
+        return ET.tostring(root)
+
+    # Ensure metadataPrefix can be handled
+    if prefix not in ['datacite', 'oai_dc', 'resumptionToken']:
+        child = ET.SubElement(root, 'error', {'code': 'badArgument'})
+        child.text = 'metadataPrefix "{}" cannot be processed'.format(
+            prefix)
+        return ET.tostring(root)
+
     # print('list_results query: {}'.format(query))
     md_cursor = 0
     if md_token:
@@ -257,37 +270,9 @@ def process_request(request_base, query_string, **kwargs):
         get_record(root, request_element, **kwargs)
 
     elif verb == 'ListRecords':
-        # Ensure metadataPrefix is provided
-        metadataPrefix = kwargs.get('metadataPrefix', '')
-        if metadataPrefix is None or len(metadataPrefix) == 0:
-            child = ET.SubElement(root, 'error', {'code': 'badArgument'})
-            child.text = 'argument "metadataPrefix" not found'
-            return ET.tostring(root)
-
-        # Ensure metadataPrefix can be handled
-        if metadataPrefix not in ['datacite', 'oai_dc', 'resumptionToken']:
-            child = ET.SubElement(root, 'error', {'code': 'badArgument'})
-            child.text = 'metadataPrefix "{}" cannot be processed'.format(
-                metadataPrefix)
-            return ET.tostring(root)
-
         list_results(root, request_element, 'records', **kwargs)
 
     elif verb == 'ListIdentifiers':
-        # Ensure metadataPrefix is provided
-        metadataPrefix = kwargs.get('metadataPrefix', '')
-        if metadataPrefix is None or len(metadataPrefix) == 0:
-            child = ET.SubElement(root, 'error', {'code': 'badArgument'})
-            child.text = 'argument "metadataPrefix" not found'
-            return ET.tostring(root)
-
-        # Ensure metadataPrefix can be handled
-        if metadataPrefix not in ['datacite', 'oai_dc', 'resumptionToken']:
-            child = ET.SubElement(root, 'error', {'code': 'badArgument'})
-            child.text = 'metadataPrefix "{}" cannot be processed'.format(
-                metadataPrefix)
-            return ET.tostring(root)
-
         list_results(root, request_element, 'identifiers', **kwargs)
 
     elif verb == 'Identity':
