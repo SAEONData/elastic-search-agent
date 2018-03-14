@@ -11,7 +11,7 @@ def search_all():
 
 def search(**kwargs):
     s = Metadata.search()
-    q_list = [Q({"match": {'content_type': 'Metadata'}}), ]
+    q_list = []
     fields = ''
     for k in kwargs:
         print('------------------------' + k)
@@ -21,7 +21,7 @@ def search(**kwargs):
         q_item = Q({"match": {k: kwargs[k]}})
         q_list.append(q_item)
     qry = {'bool': {'must': q_list}}
-    # print('Search Query: {}'.format(qry))
+    print('Search Query: {}'.format(qry))
     s.query = qry
 
     if fields:

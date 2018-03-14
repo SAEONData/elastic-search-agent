@@ -15,6 +15,7 @@ from agent.persist import ResumptionToken
 from agent.datacite_export import generateXMLDataCite
 from agent.dc_export import generateXMLDC
 from datetime import datetime
+from elasticsearch_dsl import Q
 import xml.etree.ElementTree as ET
 
 
@@ -54,8 +55,8 @@ def format_records(root, records, prefix):
 
 
 def get_record(root, request_element, **kwargs):
-    query = {}
     prefix = 'datacite'
+    qry = None
     for k in kwargs:
         if k == 'verb':
             # ignore
@@ -66,14 +67,25 @@ def get_record(root, request_element, **kwargs):
             continue
         if k == 'identifier':
             key = 'record.identifier.identifier'
-        else:
-            # TODO
-            raise RuntimeError('get_record: unknown param {}'.format(k))
-        query[key] = kwargs[k]
+            qry = Q({"match": {key: kwargs[k]}})
+            break
 
-    records = Metadata.search(**query)
+    if qry is None:
+        # Ensure identifier is provided
+        child = ET.SubElement(root, 'error', {'code': 'badArgument'})
+        child.text = 'argument "identifier" not found'
+        return ET.tostring(root)
+
+    # print('Search for query {}'.format(qry))
+    srch = Metadata.search()
+    srch.query = qry
+    records = srch.execute()
     records = [r for r in records]
-    print('Found {} records'.format(len(records)))
+    if len(records) == 0:
+        child = ET.SubElement(root, 'error', {'code': 'idDoesNotExist'})
+        child.text = 'Not matching identifier'
+        return ET.tostring(root)
+    # print('Found {} records'.format(len(records)))
     return format_records(root, records, prefix)
 
 
@@ -225,9 +237,8 @@ def process_request(request_base, query_string, **kwargs):
 
         # Ensure metadataPrefix can be handled
         if metadataPrefix not in ['datacite', 'oai_dc']:
-            child = ET.SubElement(root, 'error', {'code': 'badArgument'})
-            child.text = 'metadataPrefix "{}" cannot be processed'.format(
-                metadataPrefix)
+            child = ET.SubElement(
+                root, 'error', {'code': 'cannotDisseminateFormat'})
             return ET.tostring(root)
 
         get_record(root, request_element, **kwargs)

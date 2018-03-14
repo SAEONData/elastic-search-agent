@@ -280,4 +280,4 @@ JSON_DICTS = [
 ]
 
 if __name__ == "__main__":
-    add_metadata_records(10)
+    add_metadata_records()

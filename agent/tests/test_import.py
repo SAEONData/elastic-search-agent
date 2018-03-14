@@ -1,10 +1,10 @@
 import json
 import requests
-import time
-from datetime import datetime
+# import time
 from agent.config import import_url
 from agent.config import import_user
 from agent.config import import_password
+# from agent.utils import gen_unique_id
 from test_add import add_a_metadata_record
 
 
@@ -24,20 +24,19 @@ def import_metadata_record(path):
     return response.text
 
 
-def gen_unique_id():
-    return datetime.now().strftime("%Y%m%d%H%M%S%f")
-
-
 def import_metadata_records():
-    # paths = ["Institutions/coj/coj/metadata", ]
-    # "Portals/test-mike/testcustmike/metadata", ]
-    paths = ['Institutions/coj/coj/metadata', ]
+    paths = []
+    # paths.append("Institutions/coj/coj/metadata")
+    # paths.append("Portals/test-mike/testcustmike/metadata")
+    # paths.append('Institutions/coj/coj/metadata')
+    # paths.append("Institutions/sa-risk-and-vulnerability-atlas/sarva/metadata")
+    paths.append("Institutions/geoss/geoss/metadata")
     for path in paths:
         records = import_metadata_record(path)
         records = json.loads(records)
         for record in records['content']:
-            time.sleep(1)
-            record['jsonData']['identifier']['identifier'] = gen_unique_id()
+            # time.sleep(1)
+            # record['jsonData']['identifier']['identifier'] = gen_unique_id()
             add_a_metadata_record(record['jsonData'], set_spec='Import')
 
 

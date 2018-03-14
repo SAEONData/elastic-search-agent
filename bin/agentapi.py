@@ -11,6 +11,7 @@ from agent.persist import Metadata
 from agent.search import FacetedSearch
 from agent.search import search_all
 from agent.search import search
+from agent.utils import json_handler
 
 
 class AgentAPI(object):
@@ -38,6 +39,13 @@ class AgentAPI(object):
         identifier = record.get('identifier')
         if identifier == '':
             record['identifier'] = {}
+
+        dates = record.get('dates')
+        lst = []
+        for date_dict in dates:
+            if date_dict.get('date', '') != '':
+                lst.append(date_dict)
+        record['dates'] = lst
 
         # Metadata.init()
         try:
@@ -70,7 +78,7 @@ class AgentAPI(object):
         return output
 
     @cherrypy.expose
-    @cherrypy.tools.json_out()
+    @cherrypy.tools.json_out(handler=json_handler)
     def read(self, **kwargs):
         output = {'success': False}
         if kwargs:
@@ -83,7 +91,6 @@ class AgentAPI(object):
             response = search_all()
         lines = []
         for hit in response:
-            # lines.append(json.dumps(hit.to_dict(), default=str))
             lines.append(hit.to_dict())
 
         output['success'] = True
