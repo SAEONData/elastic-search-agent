@@ -13,7 +13,7 @@ from agent.config import sampleIdentifier
 from agent.persist import Metadata
 from agent.persist import ResumptionToken
 from agent.datacite_export import generateXMLDataCite
-from agent.dc_export import generateXMLDC
+from agent.oai_dc_export import generateXMLDC
 from datetime import datetime
 from elasticsearch_dsl import Q
 import xml.etree.ElementTree as ET
@@ -57,25 +57,48 @@ def format_identifier(root, record):
 
 
 def format_records(root, records, prefix, md_token=None):
-    if records:
+    if prefix == 'oai_datacite':
+        # Override root
+        root = ET.Element("oai_datacite")
+        # , {
+        #     "xsi:schemaLocation":
+        #     "http://schema.datacite.org/oai/oai-1.0/ http://schema.datacite.org/oai/oai-1.0/oai.xsd"
+        # })
+        child = ET.SubElement(root, 'isReferenceQuality')
+        child.text = 'true'
+        child = ET.SubElement(root, 'schemaVersion')
+        child.text = '2.1'
+        child = ET.SubElement(root, 'datacentreSymbol')
+        child.text = 'CISTI.JOE'
+        el_getrecord = ET.SubElement(root, 'payload')
+    else:
         el_getrecord = ET.SubElement(root, 'GetRecord')
 
-        for record in records:
+    for record in records:
+        if prefix == 'oai_datacite':
+            el_record = ET.SubElement(el_getrecord, "resource")
+            # , {
+            #     'xsi:schemaLocation': "http://datacite.org/schema/kernel-2.1 http://schema.datacite.org/meta/kernel-2.1/metadata.xsd"})
+        else:
             el_record = ET.SubElement(el_getrecord, "record")
             format_identifier(el_record, record)
-            try:
-                if prefix == 'datacite':
-                    generateXMLDataCite(
-                        el_record, record.to_dict().get('record'))
-                elif prefix == 'oai_dc':
-                    generateXMLDC(
-                        el_record, record.to_dict().get('record'))
-            except AttributeError as e:
-                print('AttributeError: {}'.format(e))
+        try:
+            if prefix == 'datacite':
+                generateXMLDataCite(
+                    el_record, record.to_dict().get('record'))
+            elif prefix == 'oai_datacite':
+                generateXMLDataCite(
+                    el_record, record.to_dict().get('record'))
+            elif prefix == 'oai_dc':
+                generateXMLDC(
+                    el_record, record.to_dict().get('record'))
+        except AttributeError as e:
+            print('AttributeError: {}'.format(e))
+
     if md_token:
         child = ET.SubElement(root, 'resumptionToken')
         child.text = md_token
-    return
+    return root
 
 
 def get_record(root, request_element, **kwargs):
@@ -88,17 +111,31 @@ def get_record(root, request_element, **kwargs):
         request_element.set(k, kwargs[k])
         if k == 'metadataPrefix':
             prefix = kwargs[k]
-            continue
-        if k == 'identifier':
+        elif k == 'identifier':
             key = 'record.identifier.identifier'
             qry = Q({"match": {key: kwargs[k]}})
-            break
+        else:
+            child = ET.SubElement(root, 'error', {'code': 'badArgument'})
+            child.text = 'Unknown argument "{}"'.format(k)
+            return root
+
+    # Ensure metadataPrefix is provided
+    if prefix is None or len(prefix) == 0:
+        child = ET.SubElement(root, 'error', {'code': 'badArgument'})
+        child.text = 'argument "metadataPrefix" is required'
+        return root
+
+    # Ensure metadataPrefix can be handled
+    if prefix not in ['datacite', 'oai_dc', 'oai_datacite']:
+        child = ET.SubElement(root, 'error', {'code': 'badArgument'})
+        child.text = 'metadataPrefix "{}" cannot be processed'.format(prefix)
+        return root
 
     if qry is None:
         # Ensure identifier is provided
         child = ET.SubElement(root, 'error', {'code': 'badArgument'})
         child.text = 'argument "identifier" not found'
-        return
+        return root
 
     # print('Search for query {}'.format(qry))
     srch = Metadata.search()
@@ -108,7 +145,7 @@ def get_record(root, request_element, **kwargs):
     if len(records) == 0:
         child = ET.SubElement(root, 'error', {'code': 'idDoesNotExist'})
         child.text = 'Not matching identifier'
-        return
+        return root
 
     # print('Found {} records'.format(len(records)))
     return format_records(root, records, prefix)
@@ -147,26 +184,26 @@ def list_results(root, request_element, form, **kwargs):
         else:
             child = ET.SubElement(root, 'error', {'code': 'badArgument'})
             child.text = 'Unknown argument "{}"'.format(k)
-            return
+            return root
 
     # Ensure metadataPrefix is provided
     if prefix is None or len(prefix) == 0:
         child = ET.SubElement(root, 'error', {'code': 'badArgument'})
         child.text = 'argument "metadataPrefix" is required'
-        return
+        return root
 
     # Ensure metadataPrefix can be handled
-    if prefix not in ['datacite', 'oai_dc', 'resumptionToken']:
+    if prefix not in ['datacite', 'oai_dc', 'oai_datacite']:
         child = ET.SubElement(root, 'error', {'code': 'badArgument'})
         child.text = 'metadataPrefix "{}" cannot be processed'.format(prefix)
-        return
+        return root
 
     md_cursor = 0
     if md_token:
         md_cursor = find_resumption_token(md_token)
         if md_cursor is None:
             ET.SubElement(root, 'error', {'code': 'badResumptionToken'})
-            return
+            return root
 
     end = md_cursor + 10
     print('Cursor: {} - {}'.format(md_cursor, end))
@@ -176,6 +213,9 @@ def list_results(root, request_element, form, **kwargs):
     srch = srch[md_cursor:end]
     records = srch.execute()
     records = [r for r in records]
+    if len(records) == 0:
+        child = ET.SubElement(root, 'error', {'code': 'noRecordsMatch'})
+        return root
     # print(', '.join([r.doc_type for r in records]))
     new_token = None
     if len(records) == 10:
@@ -224,6 +264,34 @@ def identity(root, repositoryName, baseURL, protocolVersion, adminEmail,
     child.text = sampleIdentifier
 
 
+def list_metadata_formats(root):
+    el_list = ET.SubElement(root, 'ListMetadataFormats')
+
+    el_format = ET.SubElement(el_list, 'metadataFormat')
+    child = ET.SubElement(el_format, 'metadataPrefix')
+    child.text = 'oai_dc'
+    child = ET.SubElement(el_format, 'schema')
+    child.text = 'http://www.openarchives.org/OAI/2.0/oai_dc.xsd'
+    child = ET.SubElement(el_format, 'metadataNamespace')
+    child.text = 'http://www.openarchives.org/OAI/2.0/oai_dc/'
+
+    el_format = ET.SubElement(el_list, 'metadataFormat')
+    child = ET.SubElement(el_format, 'metadataPrefix')
+    child.text = 'datacite'
+    child = ET.SubElement(el_format, 'schema')
+    child.text = 'http://datacite.org/schema/nonexistant'
+    child = ET.SubElement(el_format, 'metadataNamespace')
+    child.text = 'http://schema.datacite.org/meta/nonexistant/nonexistant.xsd'
+
+    el_format = ET.SubElement(el_list, 'metadataFormat')
+    child = ET.SubElement(el_format, 'metadataPrefix')
+    child.text = 'oai_datacite'
+    child = ET.SubElement(el_format, 'schema')
+    child.text = 'http://schema.datacite.org/oai/oai-1.1/'
+    child = ET.SubElement(el_format, 'metadataNamespace')
+    child.text = 'http://schema.datacite.org/oai/oai-1.1/oai.xsd'
+
+
 def process_request(request_base, query_string, **kwargs):
     root = ET.Element("OAI-PMH", {
         "xmlns": "http://www.openarchives.org/OAI/2.0/",
@@ -244,30 +312,24 @@ def process_request(request_base, query_string, **kwargs):
         return ET.tostring(root)
 
     # Ensure verb can be handled
-    if verb not in ['GetRecord', 'Identity', 'ListIdentifiers', 'ListRecords']:
+    allowed_verbs = [
+        'GetRecord',
+        'Identity',
+        'ListMetadataFormats',
+        'ListIdentifiers',
+        'ListRecords',
+    ]
+    if verb not in allowed_verbs:
         child = ET.SubElement(root, 'error', {'code': 'badVerb'})
         child.text = 'verb "{}" cannot be processed'.format(verb)
         return ET.tostring(root)
 
     request_element.set('verb', verb)
     if verb == 'GetRecord':
-        # Ensure metadataPrefix is provided
-        metadataPrefix = kwargs.get('metadataPrefix', '')
-        if metadataPrefix is None or len(metadataPrefix) == 0:
-            child = ET.SubElement(root, 'error', {'code': 'badArgument'})
-            child.text = 'argument "metadataPrefix" not found'
-            return ET.tostring(root)
-
-        # Ensure metadataPrefix can be handled
-        if metadataPrefix not in ['datacite', 'oai_dc']:
-            child = ET.SubElement(
-                root, 'error', {'code': 'cannotDisseminateFormat'})
-            return ET.tostring(root)
-
-        get_record(root, request_element, **kwargs)
+        root = get_record(root, request_element, **kwargs)
 
     elif verb == 'ListRecords':
-        list_results(root, request_element, 'records', **kwargs)
+        root = list_results(root, request_element, 'records', **kwargs)
 
     elif verb == 'ListIdentifiers':
         list_results(root, request_element, 'identifiers', **kwargs)
@@ -278,5 +340,9 @@ def process_request(request_base, query_string, **kwargs):
                  adminEmail, earliestDatestamp, deletedRecord,
                  granularity, compressions, scheme, repositoryIdentifier,
                  delimiter, sampleIdentifier)
+
+    elif verb == 'ListMetadataFormats':
+
+        list_metadata_formats(root)
 
     return ET.tostring(root)
