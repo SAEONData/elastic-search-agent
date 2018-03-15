@@ -36,11 +36,18 @@ class Metadata(DocType):
                     "match_mapping_type": "string",
                     "mapping": Keyword("not_analyzed")
                 }
+            },
+            {
+                "record":
+                {
+                    "path_match": "record.publicationYear",
+                    "match_mapping_type": "string",
+                    "mapping": Integer()
+                }
             }
         ])
 
     def save(self, **kwargs):
-        # self.created_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S %f")
         self.created_at = datetime.now()
         return super().save(**kwargs)
 

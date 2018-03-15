@@ -10,10 +10,11 @@ from agent.config import scheme
 from agent.config import repositoryIdentifier
 from agent.config import delimiter
 from agent.config import sampleIdentifier
-from agent.persist import Metadata
-from agent.persist import ResumptionToken
 from agent.datacite_export import generateXMLDataCite
 from agent.oai_dc_export import generateXMLDC
+from agent.persist import Metadata
+from agent.persist import ResumptionToken
+from agent.search import search
 from datetime import datetime
 from elasticsearch_dsl import Q
 import xml.etree.ElementTree as ET
@@ -230,20 +231,26 @@ def list_results(root, request_element, form, **kwargs):
         raise RuntimeError('list_results: unknown param {}'.format(k))
 
 
-def identity(root, repositoryName, baseURL, protocolVersion, adminEmail,
+def identity(root, url, repositoryName, baseURL, protocolVersion, adminEmail,
              earliestDatestamp, deletedRecord, granularity, compressions,
              scheme, repositoryIdentifier, delimiter, sampleIdentifier):
     child = ET.SubElement(root, 'Identity')
     child = ET.SubElement(root, 'repositoryName')
     child.text = repositoryName
     child = ET.SubElement(root, 'baseURL')
-    child.text = baseURL
+    child.text = baseURL.format(url)
     child = ET.SubElement(root, 'protocolVersion')
     child.text = protocolVersion
     child = ET.SubElement(root, 'adminEmail')
     child.text = adminEmail
-    child = ET.SubElement(root, 'earliestDatestamp')
-    child.text = earliestDatestamp
+    years = [a for a in search(**{
+        'record.size': 1,
+        'record.fields': 'publicationYear',
+        'record.sort': 'publicationYear'})]
+    if years:
+        print(years[0].record['publicationYear'])
+        child = ET.SubElement(root, 'earliestDatestamp')
+        child.text = earliestDatestamp.format(years[0].record['publicationYear'])
     child = ET.SubElement(root, 'deletedRecord')
     child.text = deletedRecord
     child = ET.SubElement(root, 'granularity')
@@ -259,11 +266,11 @@ def identity(root, repositoryName, baseURL, protocolVersion, adminEmail,
     child = ET.SubElement(desc, 'scheme')
     child.text = scheme
     child = ET.SubElement(oai_id, 'repositoryIdentifier')
-    child.text = repositoryIdentifier
+    child.text = repositoryIdentifier.format(url)
     child = ET.SubElement(oai_id, 'delimiter')
     child.text = delimiter
     child = ET.SubElement(oai_id, 'sampleIdentifier')
-    child.text = sampleIdentifier
+    child.text = sampleIdentifier.format(url)
 
 
 def list_metadata_formats(root):
@@ -295,6 +302,7 @@ def list_metadata_formats(root):
 
 
 def process_request(request_base, query_string, **kwargs):
+    url = request_base.split('/')[2]
     root = ET.Element("OAI-PMH", {
         "xmlns": "http://www.openarchives.org/OAI/2.0/",
         "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
@@ -338,7 +346,7 @@ def process_request(request_base, query_string, **kwargs):
 
     elif verb == 'Identity':
 
-        identity(root, repositoryName, baseURL, protocolVersion,
+        identity(root, url, repositoryName, baseURL, protocolVersion,
                  adminEmail, earliestDatestamp, deletedRecord,
                  granularity, compressions, scheme, repositoryIdentifier,
                  delimiter, sampleIdentifier)

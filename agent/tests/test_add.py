@@ -194,85 +194,85 @@ JSON_DICTS = [
             "identifierType": "DOI"
         }
     },
-    {
-        "subtitle": "",
-        "contributors": [],
-        "userId": "",
-        "xsiSchema": "http://datacite.org/schema/kernel-3",
-        "owner": "",
-        "subjects": [
-            {
-                "subjectScheme": "Dewey",
-                "schemeURI": "http://dewey.info/",
-                "subject": "SOC"
-            },
-            {
-                "subjectScheme": "",
-                "schemeURI": "",
-                "subject": "COS"
-            }
-        ],
-        "additionalFields": {
-            "onlineResources": [
-            ],
-            "coverageBegin": "",
-            "coverageEnd": ""
-        },
-        "geoLocations": [
-            {
-                "geoLocationBox": "-34.83416999999997 16.451910000000055 -22.12502999999998 32.944980000000044"
-            }
-        ],
-        "userVersion": "",
-        "description": [
-            {
-                "descriptionType": "",
-                "description": "Soil Organic Carbon (SOC) represents all the organic carbon in the soil to a depth of 1m. SOC is derived from the data provided by the Africa Soil Information System (AfSIS). In this case the organic carbon of the top 300mm of the natural soil was NOT reduced by land cover factors.\n\nUnits: average gC/m2 within 1km x 1km pixel"
-            }
-        ],
-        "publicationYear": "2017",
-        "relatedIdentifiers": [],
-        "creators": [
-            {
-                "creatorName": "Prof J Soap",
-                "affiliation": "UCT"
-            }
-        ],
-        "publisher": "UCT",
-        "dates": [
-            {
-                "date": "2017-01-22",
-                "dateType": "Accepted"
-            },
-            {
-                "date": "2017-02-03",
-                "dateType": "Issued"
-            }
-        ],
-        "language": "eng",
-        "rights": [
-            {
-                "rights": "",
-                "rightsURI": ""
-            }
-        ],
-        "resourceType": "on",
-        "sizes": [],
-        "resourceTypeGeneral": "",
-        "bounds": [],
-        "alternateIdentifiers": [],
-        "titles": [
-            {
-                "titleType": "",
-                "title": "Soil Organic Carbon Unperturbed (gC/sq.m)"
-            }
-        ],
-        "identifier": {
-            "identifier": "12345/XYZ",
-            "identifierType": "DOI"
-        }
-    },
+    # {
+    #     "subtitle": "",
+    #     "contributors": [],
+    #     "userId": "",
+    #     "xsiSchema": "http://datacite.org/schema/kernel-3",
+    #     "owner": "",
+    #     "subjects": [
+    #         {
+    #             "subjectScheme": "Dewey",
+    #             "schemeURI": "http://dewey.info/",
+    #             "subject": "SOC"
+    #         },
+    #         {
+    #             "subjectScheme": "",
+    #             "schemeURI": "",
+    #             "subject": "COS"
+    #         }
+    #     ],
+    #     "additionalFields": {
+    #         "onlineResources": [
+    #         ],
+    #         "coverageBegin": "",
+    #         "coverageEnd": ""
+    #     },
+    #     "geoLocations": [
+    #         {
+    #             "geoLocationBox": "-34.83416999999997 16.451910000000055 -22.12502999999998 32.944980000000044"
+    #         }
+    #     ],
+    #     "userVersion": "",
+    #     "description": [
+    #         {
+    #             "descriptionType": "",
+    #             "description": "Soil Organic Carbon (SOC) represents all the organic carbon in the soil to a depth of 1m. SOC is derived from the data provided by the Africa Soil Information System (AfSIS). In this case the organic carbon of the top 300mm of the natural soil was NOT reduced by land cover factors.\n\nUnits: average gC/m2 within 1km x 1km pixel"
+    #         }
+    #     ],
+    #     "publicationYear": "2017",
+    #     "relatedIdentifiers": [],
+    #     "creators": [
+    #         {
+    #             "creatorName": "Prof J Soap",
+    #             "affiliation": "UCT"
+    #         }
+    #     ],
+    #     "publisher": "UCT",
+    #     "dates": [
+    #         {
+    #             "date": "2017-01-22",
+    #             "dateType": "Accepted"
+    #         },
+    #         {
+    #             "date": "2017-02-03",
+    #             "dateType": "Issued"
+    #         }
+    #     ],
+    #     "language": "eng",
+    #     "rights": [
+    #         {
+    #             "rights": "",
+    #             "rightsURI": ""
+    #         }
+    #     ],
+    #     "resourceType": "on",
+    #     "sizes": [],
+    #     "resourceTypeGeneral": "",
+    #     "bounds": [],
+    #     "alternateIdentifiers": [],
+    #     "titles": [
+    #         {
+    #             "titleType": "",
+    #             "title": "Soil Organic Carbon Unperturbed (gC/sq.m)"
+    #         }
+    #     ],
+    #     "identifier": {
+    #         "identifier": "12345/XYZ",
+    #         "identifierType": "DOI"
+    #     }
+    # },
 ]
 
 if __name__ == "__main__":
-    add_metadata_records()
+    add_metadata_records(10)

@@ -5,31 +5,46 @@ from agent.persist import Metadata
 
 
 def search_all():
-    s = Metadata.search()
-    return s.scan()
+    srch = Metadata.search()
+    return srch.scan()
 
 
 def search(**kwargs):
-    s = Metadata.search()
-    q_list = []
+    srch = Metadata.search()
     fields = ''
+    sort_field = None
+    size = 100
     for k in kwargs:
-        print('------------------------' + k)
+        # print('------------------------' + k)
         if k == 'record.fields':
             fields = kwargs[k]
             continue
-        q_item = Q({"match": {k: kwargs[k]}})
-        q_list.append(q_item)
-    qry = {'bool': {'must': q_list}}
-    print('Search Query: {}'.format(qry))
-    s.query = qry
+        elif k == 'record.size':
+            size = kwargs[k]
+            continue
+        elif k == 'record.sort':
+            field = kwargs[k]
+            if field.startswith('-'):
+                field = field[1:]
+                sort_field = {'record.{}'.format(field): {'order': 'desc'}}
+            else:
+                sort_field = {'record.{}'.format(field): {'order': 'asc'}}
+            continue
+        srch.update_from_dict({"match": {k: kwargs[k]}})
+    srch.update_from_dict({'size': size})
+
+    if sort_field:
+        # print('Sort on {}'.format(sort_field))
+        # srch = srch.sort('record.publicationYear', 'record.identifier.identifier')
+        srch = srch.sort(sort_field)
 
     if fields:
         new_fields = []
-        for field in fields.split(' '):
+        for field in fields.split(','):
+            # print('limit output field: record.{}'.format(field))
             new_fields.append('record.{}'.format(field))
-        s = s.source(new_fields)
-    return s.scan()
+        srch = srch.source(new_fields)
+    return srch.execute()
 
 
 class MetadataSearch(FacetedSearch):
