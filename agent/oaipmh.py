@@ -56,7 +56,7 @@ def format_identifier(root, record):
         raise RuntimeError('AttributeError: {}'.format(e))
 
 
-def format_records(root, records, prefix, md_token):
+def format_records(root, records, prefix, md_token=None):
     if records:
         el_getrecord = ET.SubElement(root, 'GetRecord')
 
@@ -140,6 +140,8 @@ def list_results(root, request_element, form, **kwargs):
             prefix = kwargs[k]
         elif k == 'set':
             q_list.append(Q({"match": {'set_spec': kwargs[k]}}))
+        # elif k == 'from':
+        #     q_list.append(Q({"match": {'publicationYear': kwargs[k]}}))
         elif k == 'resumptionToken':
             md_token = kwargs[k]
         else:
