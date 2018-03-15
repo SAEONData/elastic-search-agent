@@ -179,7 +179,7 @@ def generateXMLDataCite(root, jsonData):
                 geoLocationBox.text = gln['geoLocationBox']
 
             if gln.get('geoLocationPlace', '') != '':
-                geoLocationPlace = ET.SubElemen(
+                geoLocationPlace = ET.SubElement(
                     geoLocation, 'geoLocationPlace')
                 geoLocationPlace.text = gln['geoLocationPlace']
 
