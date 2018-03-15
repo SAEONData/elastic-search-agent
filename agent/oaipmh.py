@@ -18,6 +18,8 @@ from datetime import datetime
 from elasticsearch_dsl import Q
 import xml.etree.ElementTree as ET
 
+SIZE = 10
+
 
 def add_resumption_token(size, cursor):
     rs = ResumptionToken(md_size=size, md_cursor=cursor)
@@ -205,7 +207,7 @@ def list_results(root, request_element, form, **kwargs):
             ET.SubElement(root, 'error', {'code': 'badResumptionToken'})
             return root
 
-    end = md_cursor + 10
+    end = md_cursor + SIZE
     print('Cursor: {} - {}'.format(md_cursor, end))
     srch = Metadata.search()
     srch.query = {'bool': {'must': q_list}}
@@ -218,8 +220,8 @@ def list_results(root, request_element, form, **kwargs):
         return root
     # print(', '.join([r.doc_type for r in records]))
     new_token = None
-    if len(records) == 10:
-        new_token = add_resumption_token(size=10, cursor=end)
+    if len(records) == SIZE and end != srch.count():
+        new_token = add_resumption_token(size=SIZE, cursor=end)
     if form == 'records':
         return format_records(root, records, prefix, new_token)
     elif form == 'identifiers':
