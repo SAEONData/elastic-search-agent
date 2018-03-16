@@ -301,8 +301,8 @@ def list_metadata_formats(root):
     child.text = 'http://schema.datacite.org/oai/oai-1.1/oai.xsd'
 
 
-def process_request(request_base, query_string, **kwargs):
-    url = request_base.split('/')[2]
+def process_request(request, query_string, **kwargs):
+    url = request.headers['hostd']
     root = ET.Element("OAI-PMH", {
         "xmlns": "http://www.openarchives.org/OAI/2.0/",
         "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
@@ -312,7 +312,8 @@ def process_request(request_base, query_string, **kwargs):
     child = ET.SubElement(root, 'responseDate')
     child.text = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     request_element = ET.SubElement(root, 'request')
-    request_element.text = request_base
+    request_element.text = '{}://{}'.format(
+        request.scheme, request.headers['hostd'])
 
     # Ensure verb is provided
     verb = kwargs.get('verb', '')
