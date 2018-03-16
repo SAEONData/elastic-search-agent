@@ -169,6 +169,8 @@ def format_identifiers(root, records, prefix, md_token):
 
 def list_results(root, request_element, form, **kwargs):
     md_token = None
+    from_date = None
+    until_date = None
     prefix = 'datacite'
     q_list = []
     for k in kwargs:
@@ -180,8 +182,10 @@ def list_results(root, request_element, form, **kwargs):
             prefix = kwargs[k]
         elif k == 'set':
             q_list.append(Q({"match": {'set_spec': kwargs[k]}}))
-        # elif k == 'from':
-        #     q_list.append(Q({"match": {'publicationYear': kwargs[k]}}))
+        elif k == 'from':
+            from_date = kwargs[k]
+        elif k == 'until':
+            until_date = kwargs[k]
         elif k == 'resumptionToken':
             md_token = kwargs[k]
         else:
@@ -201,6 +205,7 @@ def list_results(root, request_element, form, **kwargs):
         child.text = 'metadataPrefix "{}" cannot be processed'.format(prefix)
         return root
 
+    # Get resumptionToken
     md_cursor = 0
     if md_token:
         md_cursor = find_resumption_token(md_token)
@@ -208,12 +213,30 @@ def list_results(root, request_element, form, **kwargs):
             ET.SubElement(root, 'error', {'code': 'badResumptionToken'})
             return root
 
-    end = md_cursor + SIZE
-    print('Cursor: {} - {}'.format(md_cursor, end))
+    if from_date:
+        try:
+            from_date = datetime.strptime(from_date, '%Y-%m-%d')
+        except Exception as e:
+            print('Until date format error {}'.format(e))
+            child = ET.SubElement(root, 'error', {'code': 'badArgument'})
+            child.text = 'from date {} has incorrect format'.format(from_date)
+            return root
+
+    if until_date:
+        try:
+            until_date = datetime.strptime(until_date, '%Y-%m-%d')
+        except Exception as e:
+            print('Until date format error {}'.format(e))
+            child = ET.SubElement(root, 'error', {'code': 'badArgument'})
+            child.text = 'until date {} has incorrect format'.format(until_date)
+            return root
+
+    end_cursor = md_cursor + SIZE
     srch = Metadata.search()
     srch.query = {'bool': {'must': q_list}}
+    # srch = srch.filter('range': record.publicationYear={'from': from_date})
     srch = srch.sort('record.identifier.identifier')
-    srch = srch[md_cursor:end]
+    srch = srch[md_cursor:end_cursor]
     records = srch.execute()
     records = [r for r in records]
     if len(records) == 0:
@@ -221,8 +244,8 @@ def list_results(root, request_element, form, **kwargs):
         return root
     # print(', '.join([r.doc_type for r in records]))
     new_token = None
-    if len(records) == SIZE and end != srch.count():
-        new_token = add_resumption_token(size=SIZE, cursor=end)
+    if len(records) == SIZE and end_cursor != srch.count():
+        new_token = add_resumption_token(size=SIZE, cursor=end_cursor)
     if form == 'records':
         return format_records(root, records, prefix, new_token)
     elif form == 'identifiers':
@@ -243,14 +266,14 @@ def identity(root, host, repositoryName, baseURL, protocolVersion, adminEmail,
     child.text = protocolVersion
     child = ET.SubElement(root, 'adminEmail')
     child.text = adminEmail
-    years = [a for a in search(**{
+    years = search(**{
         'record.size': 1,
         'record.fields': 'publicationYear',
-        'record.sort': 'publicationYear'})]
-    if years:
-        print(years[0].record['publicationYear'])
+        'record.sort': 'publicationYear'})
+    if years.get('success'):
+        year = [y for y in years['result']][0]['record']['publicationYear']
         child = ET.SubElement(root, 'earliestDatestamp')
-        child.text = earliestDatestamp.format(years[0].record['publicationYear'])
+        child.text = earliestDatestamp.format(year)
     child = ET.SubElement(root, 'deletedRecord')
     child.text = deletedRecord
     child = ET.SubElement(root, 'granularity')
