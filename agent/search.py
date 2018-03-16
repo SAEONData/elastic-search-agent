@@ -35,7 +35,6 @@ def search(**kwargs):
 
     if sort_field:
         # print('Sort on {}'.format(sort_field))
-        # srch = srch.sort('record.publicationYear', 'record.identifier.identifier')
         srch = srch.sort(sort_field)
 
     if fields:
