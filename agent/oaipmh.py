@@ -231,14 +231,14 @@ def list_results(root, request_element, form, **kwargs):
         raise RuntimeError('list_results: unknown param {}'.format(k))
 
 
-def identity(root, url, repositoryName, baseURL, protocolVersion, adminEmail,
+def identity(root, host, repositoryName, baseURL, protocolVersion, adminEmail,
              earliestDatestamp, deletedRecord, granularity, compressions,
              scheme, repositoryIdentifier, delimiter, sampleIdentifier):
     child = ET.SubElement(root, 'Identity')
     child = ET.SubElement(root, 'repositoryName')
     child.text = repositoryName
     child = ET.SubElement(root, 'baseURL')
-    child.text = baseURL.format(url)
+    child.text = baseURL.format(host)
     child = ET.SubElement(root, 'protocolVersion')
     child.text = protocolVersion
     child = ET.SubElement(root, 'adminEmail')
@@ -266,11 +266,11 @@ def identity(root, url, repositoryName, baseURL, protocolVersion, adminEmail,
     child = ET.SubElement(desc, 'scheme')
     child.text = scheme
     child = ET.SubElement(oai_id, 'repositoryIdentifier')
-    child.text = repositoryIdentifier.format(url)
+    child.text = repositoryIdentifier.format(host)
     child = ET.SubElement(oai_id, 'delimiter')
     child.text = delimiter
     child = ET.SubElement(oai_id, 'sampleIdentifier')
-    child.text = sampleIdentifier.format(url)
+    child.text = sampleIdentifier.format(host)
 
 
 def list_metadata_formats(root):
@@ -302,7 +302,9 @@ def list_metadata_formats(root):
 
 
 def process_request(request, query_string, **kwargs):
-    url = request.headers['hostd']
+    host = request.headers.get('hostd')
+    if not host:
+        host = request.headers.get('host')
     root = ET.Element("OAI-PMH", {
         "xmlns": "http://www.openarchives.org/OAI/2.0/",
         "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
@@ -312,8 +314,7 @@ def process_request(request, query_string, **kwargs):
     child = ET.SubElement(root, 'responseDate')
     child.text = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     request_element = ET.SubElement(root, 'request')
-    request_element.text = '{}://{}'.format(
-        request.scheme, request.headers['hostd'])
+    request_element.text = '{}://{}'.format(request.scheme, host)
 
     # Ensure verb is provided
     verb = kwargs.get('verb', '')
@@ -347,7 +348,7 @@ def process_request(request, query_string, **kwargs):
 
     elif verb == 'Identity':
 
-        identity(root, url, repositoryName, baseURL, protocolVersion,
+        identity(root, host, repositoryName, baseURL, protocolVersion,
                  adminEmail, earliestDatestamp, deletedRecord,
                  granularity, compressions, scheme, repositoryIdentifier,
                  delimiter, sampleIdentifier)

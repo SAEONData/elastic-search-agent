@@ -124,7 +124,7 @@ class AgentAPI(object):
     @cherrypy.expose
     def oaipmh(self, **kwargs):
         request = cherrypy.request
-        cherrypy.log('oai: {}'.format(request.headers['hostd']))
+        cherrypy.log('oaipmh')
 
         response = process_request(
             request, request.query_string, **kwargs)
