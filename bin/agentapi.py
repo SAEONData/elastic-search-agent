@@ -89,8 +89,13 @@ class AgentAPI(object):
             response = search(**new_kwargs)
         else:
             response = search_all()
+
+        if not response['success']:
+            output['error'] = response['error']
+            return output
+
         lines = []
-        for hit in response:
+        for hit in response['result']:
             lines.append(hit.to_dict())
 
         output['success'] = True

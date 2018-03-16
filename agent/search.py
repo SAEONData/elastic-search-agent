@@ -1,49 +1,98 @@
-from elasticsearch_dsl import FacetedSearch
-from elasticsearch_dsl import TermsFacet
-from elasticsearch_dsl import Q
+from agent.config import metadata_index_name
 from agent.persist import Metadata
+from elasticsearch.exceptions import TransportError
+from elasticsearch_dsl import FacetedSearch
+from elasticsearch_dsl import Mapping
+from elasticsearch_dsl import Q
+from elasticsearch_dsl import TermsFacet
 
 
 def search_all():
     srch = Metadata.search()
-    return srch.scan()
+    return {'success': True, 'result': srch.scan()}
 
 
 def search(**kwargs):
+    mapping = Mapping.from_es(metadata_index_name, 'doc')
+    output = {'success': False}
     srch = Metadata.search()
-    fields = ''
+    source_fields = ''
     sort_field = None
     size = 100
-    for k in kwargs:
-        # print('------------------------' + k)
-        if k == 'record.fields':
-            fields = kwargs[k]
+    q_list = []
+    for key in kwargs:
+        # print('------------------------' + key)
+        if key == 'record.fields':
+            source_fields = kwargs[key]
             continue
-        elif k == 'record.size':
-            size = kwargs[k]
+        elif key == 'record.size':
+            size = kwargs[key]
             continue
-        elif k == 'record.sort':
-            field = kwargs[k]
-            if field.startswith('-'):
-                field = field[1:]
-                sort_field = {'record.{}'.format(field): {'order': 'desc'}}
-            else:
-                sort_field = {'record.{}'.format(field): {'order': 'asc'}}
+        elif key == 'record.sort':
+            sort_field = kwargs[key]
             continue
-        srch.update_from_dict({"match": {k: kwargs[k]}})
+        # Otherwise add to query
+        field_type = mapping.resolve_field(key)
+        field_name = '.'.join(key.split('.')[1:])
+        if field_type is None:
+            field_name = '.'.join(key.split('.')[1:])
+            msg = 'Unknown search field: {}'.format(field_name)
+            output['error'] = msg
+        if type(field_type).name in ['object', ]:
+            msg = 'Cannot search on field: {}'.format(field_name)
+            output['error'] = msg
+            return output
+        q_list.append(Q({"match": {key: kwargs[key]}}))
+
+    srch.query = {'bool': {'must': q_list}}
     srch.update_from_dict({'size': size})
 
     if sort_field:
         # print('Sort on {}'.format(sort_field))
+        if sort_field.startswith('-'):
+            sort_field = sort_field[1:]
+            sort_field_name = 'record.{}'.format(sort_field)
+            sort_field = {sort_field_name: {'order': 'desc'}}
+        else:
+            sort_field_name = 'record.{}'.format(sort_field)
+            sort_field = {sort_field_name: {'order': 'asc'}}
+
+        field_type = mapping.resolve_field(sort_field_name)
+        if field_type is None:
+            msg = 'Unknown sort field: {}'.format(sort_field_name)
+            output['error'] = msg
+            return output
+        if type(field_type).name in ['object', ]:
+            msg = 'Cannot sort on field: {}'.format(sort_field_name)
+            output['error'] = msg
+            return output
         srch = srch.sort(sort_field)
 
-    if fields:
+    if source_fields:
         new_fields = []
-        for field in fields.split(','):
+        for field in source_fields.split(','):
+            field = field.strip()
             # print('limit output field: record.{}'.format(field))
-            new_fields.append('record.{}'.format(field))
+            field_name = 'record.{}'.format(field)
+            if mapping.resolve_field(field_name) is None:
+                msg = 'Unknown source field: {}'.format(field)
+                output['error'] = msg
+                return output
+            new_fields.append(field_name)
         srch = srch.source(new_fields)
-    return srch.execute()
+    try:
+        output['result'] = srch.execute()
+        output['success'] = True
+    except TransportError as e:
+        if e.error == 'search_phase_execution_exception':
+            msg = 'Sort field {} is not allowed'.format(sort_field_name)
+        else:
+            msg = 'Search Engine Transport error: {}'.format(e)
+        output['error'] = msg
+    except Exception as e:
+        msg = 'Search Engine unknown error: {}'.format(e)
+        output['error'] = msg
+    return output
 
 
 class MetadataSearch(FacetedSearch):

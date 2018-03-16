@@ -30,19 +30,19 @@ class Metadata(DocType):
         dynamic_templates = MetaField([
             {
                 "record":
-                {
-                    "path_match": "record.identifier.identifier",
-                    "match_mapping_type": "string",
-                    "mapping": Keyword("not_analyzed")
-                }
+                    {
+                        "path_match": "record.identifier.identifier",
+                        "match_mapping_type": "string",
+                        "mapping": Keyword("not_analyzed")
+                    }
             },
             {
                 "record":
-                {
-                    "path_match": "record.publicationYear",
-                    "match_mapping_type": "string",
-                    "mapping": Integer()
-                }
+                    {
+                        "path_match": "record.publicationYear",
+                        "match_mapping_type": "string",
+                        "mapping": Integer()
+                    }
             }
         ])
 
