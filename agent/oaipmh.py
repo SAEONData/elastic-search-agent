@@ -15,6 +15,7 @@ from agent.oai_dc_export import generateXMLDC
 from agent.persist import Metadata
 from agent.persist import ResumptionToken
 from agent.search import search
+from agent.utils import get_request_host
 from datetime import datetime
 from elasticsearch_dsl import Q
 import xml.etree.ElementTree as ET
@@ -325,9 +326,8 @@ def list_metadata_formats(root):
 
 
 def process_request(request, query_string, **kwargs):
-    host = request.headers.get('hostd')
-    if not host:
-        host = request.headers.get('host')
+    host = get_request_host(request)
+
     root = ET.Element("OAI-PMH", {
         "xmlns": "http://www.openarchives.org/OAI/2.0/",
         "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",

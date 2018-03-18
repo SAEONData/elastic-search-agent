@@ -28,3 +28,10 @@ def json_handler(*args, **kwargs):
     # Adapted from cherrypy/lib/jsontools.py
     value = cherrypy.serving.request._json_inner_handler(*args, **kwargs)
     return json_encoder.iterencode(value)
+
+
+def get_request_host(request):
+    host = request.headers.get('hostd')
+    if not host:
+        host = request.headers.get('host')
+    return host

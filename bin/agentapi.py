@@ -2,7 +2,6 @@
 
 import cherrypy
 import json
-from elasticsearch_dsl import Search
 from agent.config import metadata_index_name
 from agent.config import server_port
 from agent.config import token_index_name
@@ -11,7 +10,10 @@ from agent.persist import Metadata
 from agent.search import FacetedSearch
 from agent.search import search_all
 from agent.search import search
+from agent.utils import get_request_host
 from agent.utils import json_handler
+from elasticsearch_dsl import Search
+import xml.etree.ElementTree as ET
 
 
 class AgentAPI(object):
@@ -139,6 +141,43 @@ class AgentAPI(object):
             'application/xml;charset=UTF-8'
         cherrypy.response.headers['Content-Length'] = len(response)
         return response
+
+    @cherrypy.expose
+    def default(self, *args, **kwargs):
+        request = cherrypy.request
+        host = get_request_host(request)
+        url = "http://{}".format(host)
+        cherrypy.log('root')
+
+        root = ET.Element("html")
+        body = ET.SubElement(root, "body")
+        child = ET.SubElement(body, "h3")
+        child.text = 'Welcome to SAEON Search Engine'
+        api = ET.SubElement(body, "h4")
+        api.text = 'REST API'
+        child = ET.SubElement(api, "br")
+        child = ET.SubElement(api, "a", {
+            'href': '{}/read'.format(url)
+        })
+        child.text = 'Read'
+
+        # OAI-PMH
+        oai = ET.SubElement(body, "h4")
+        oai.text = 'OAI-Protocal for Metadata Harverting'
+        verbs = ET.SubElement(oai, "p")
+        verbs.text = 'Verbs'
+        child = ET.SubElement(verbs, "br")
+        child = ET.SubElement(verbs, "a", {
+            'href': '{}/oaipmh?verb=Identity'.format(url)
+        })
+        child.text = 'Identity'
+        child = ET.SubElement(verbs, "br")
+        child = ET.SubElement(verbs, "a", {
+            'href': '{}/oaipmh?verb=ListMetadataFormats'.format(url)
+        })
+        child.text = 'ListMetadataFormats'
+
+        return ET.tostring(root)
 
 
 if __name__ == '__main__':
