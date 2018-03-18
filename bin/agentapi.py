@@ -167,15 +167,36 @@ class AgentAPI(object):
         verbs = ET.SubElement(oai, "p")
         verbs.text = 'Verbs'
         child = ET.SubElement(verbs, "br")
+
         child = ET.SubElement(verbs, "a", {
             'href': '{}/oaipmh?verb=Identity'.format(url)
         })
         child.text = 'Identity'
         child = ET.SubElement(verbs, "br")
+
         child = ET.SubElement(verbs, "a", {
             'href': '{}/oaipmh?verb=ListMetadataFormats'.format(url)
         })
         child.text = 'ListMetadataFormats'
+        child = ET.SubElement(verbs, "br")
+
+        child = ET.SubElement(verbs, "a", {
+            'href': '{}/oaipmh?verb=ListIdentifiers'.format(url)
+        })
+        child.text = 'ListIdentifiers'
+        child = ET.SubElement(verbs, "br")
+
+        child = ET.SubElement(verbs, "a", {
+            'href': '{}/oaipmh?verb=ListRecords'.format(url)
+        })
+        child.text = 'ListRecords'
+        child = ET.SubElement(verbs, "br")
+
+        child = ET.SubElement(verbs, "a", {
+            'href': '{}/oaipmh?verb=GetRecord'.format(url)
+        })
+        child.text = 'GetRecord'
+        child = ET.SubElement(verbs, "br")
 
         return ET.tostring(root)
 
