@@ -61,30 +61,13 @@ def format_identifier(root, record):
 
 
 def format_records(root, records, prefix, md_token=None):
-    if prefix == 'oai_datacite':
-        # Override root
-        root = ET.Element("oai_datacite")
-        # , {
-        #     "xsi:schemaLocation":
-        #     "http://schema.datacite.org/oai/oai-1.0/ http://schema.datacite.org/oai/oai-1.0/oai.xsd"
-        # })
-        child = ET.SubElement(root, 'isReferenceQuality')
-        child.text = 'true'
-        child = ET.SubElement(root, 'schemaVersion')
-        child.text = '2.1'
-        child = ET.SubElement(root, 'datacentreSymbol')
-        child.text = 'CISTI.JOE'
-        el_getrecord = ET.SubElement(root, 'payload')
-    else:
-        el_getrecord = ET.SubElement(root, 'GetRecord')
-
     for record in records:
         if prefix == 'oai_datacite':
-            el_record = ET.SubElement(el_getrecord, "resource")
+            el_record = ET.SubElement(root, "resource")
             # , {
             #     'xsi:schemaLocation': "http://datacite.org/schema/kernel-2.1 http://schema.datacite.org/meta/kernel-2.1/metadata.xsd"})
         else:
-            el_record = ET.SubElement(el_getrecord, "record")
+            el_record = ET.SubElement(root, "record")
             format_identifier(el_record, record)
         try:
             if prefix == 'datacite':
@@ -152,7 +135,25 @@ def get_record(root, request_element, **kwargs):
         return root
 
     # print('Found {} records'.format(len(records)))
-    return format_records(root, records, prefix)
+    if prefix == 'oai_datacite':
+        # Override root
+        root = ET.Element("oai_datacite")
+        # , {
+        #     "xsi:schemaLocation":
+        #     "http://schema.datacite.org/oai/oai-1.0/ http://schema.datacite.org/oai/oai-1.0/oai.xsd"
+        # })
+        child = ET.SubElement(root, 'isReferenceQuality')
+        child.text = 'true'
+        child = ET.SubElement(root, 'schemaVersion')
+        child.text = '2.1'
+        child = ET.SubElement(root, 'datacentreSymbol')
+        child.text = 'CISTI.JOE'
+        el_getrecord = ET.SubElement(root, 'payload')
+    else:
+        el_getrecord = ET.SubElement(root, 'GetRecord')
+
+    format_records(el_getrecord, records, prefix)
+    return root
 
 
 def format_identifiers(root, records, prefix, md_token):
@@ -220,7 +221,8 @@ def list_results(root, request_element, form, **kwargs):
         except Exception as e:
             print('Until date format error {}'.format(e))
             child = ET.SubElement(root, 'error', {'code': 'badArgument'})
-            child.text = 'from date {} has incorrect format'.format(from_date)
+            child.text = 'from date {} format should be YYYY-MM-DD'.format(
+                from_date)
             return root
 
     if until_date:
@@ -229,13 +231,27 @@ def list_results(root, request_element, form, **kwargs):
         except Exception as e:
             print('Until date format error {}'.format(e))
             child = ET.SubElement(root, 'error', {'code': 'badArgument'})
-            child.text = 'until date {} has incorrect format'.format(until_date)
+            child.text = 'until date {} format should be YYYY-MM-DD'.format(
+                until_date)
             return root
 
     end_cursor = md_cursor + SIZE
     srch = Metadata.search()
-    srch.query = {'bool': {'must': q_list}}
-    # srch = srch.filter('range': record.publicationYear={'from': from_date})
+    query = {'bool': {'must': q_list}}
+    if from_date and until_date:
+        dates = {'record.dates.date': {
+            'from': from_date,
+            'to': until_date}}
+        q_list.append(Q({"range": dates}))
+    elif from_date:
+        dates = {'record.dates.date': {
+            'from': from_date}}
+        q_list.append(Q({"range": dates}))
+    elif until_date:
+        dates = {'record.dates.date': {
+            'to': until_date}}
+        q_list.append(Q({"range": dates}))
+    srch.query = query
     srch = srch.sort('record.identifier.identifier')
     srch = srch[md_cursor:end_cursor]
     records = srch.execute()
@@ -248,7 +264,24 @@ def list_results(root, request_element, form, **kwargs):
     if len(records) == SIZE and end_cursor != srch.count():
         new_token = add_resumption_token(size=SIZE, cursor=end_cursor)
     if form == 'records':
-        return format_records(root, records, prefix, new_token)
+        if prefix == 'oai_datacite':
+            # Override root
+            root = ET.Element("oai_datacite")
+            # , {
+            #     "xsi:schemaLocation":
+            #     "http://schema.datacite.org/oai/oai-1.0/ http://schema.datacite.org/oai/oai-1.0/oai.xsd"
+            # })
+            child = ET.SubElement(root, 'isReferenceQuality')
+            child.text = 'true'
+            child = ET.SubElement(root, 'schemaVersion')
+            child.text = '2.1'
+            child = ET.SubElement(root, 'datacentreSymbol')
+            child.text = 'CISTI.JOE'
+            el_listrecords = ET.SubElement(root, 'payload')
+        else:
+            el_listrecords = ET.SubElement(root, 'ListRecords')
+        format_records(el_listrecords, records, prefix, new_token)
+        return root
     elif form == 'identifiers':
         return format_identifiers(root, records, prefix, new_token)
     else:
