@@ -1,6 +1,6 @@
 import cherrypy
 import json
-import datetime
+from datetime import datetime
 
 
 def gen_unique_id():
@@ -13,7 +13,7 @@ def iso_8601(adate):
 
 class _JSONEncoder(json.JSONEncoder):
     def default(self, obj):
-        if isinstance(obj, datetime.date):
+        if isinstance(obj, datetime):
             return iso_8601(obj)
         return super().default(obj)
     def iterencode(self, value):

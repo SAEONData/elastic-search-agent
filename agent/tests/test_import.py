@@ -4,7 +4,7 @@ import requests
 from agent.config import import_url
 from agent.config import import_user
 from agent.config import import_password
-# from agent.utils import gen_unique_id
+from agent.utils import gen_unique_id
 from test_add import add_a_metadata_record
 
 
@@ -36,7 +36,9 @@ def import_metadata_records():
         records = json.loads(records)
         for record in records['content']:
             # time.sleep(1)
-            # record['jsonData']['identifier']['identifier'] = gen_unique_id()
+            if not record['jsonData']['identifier']['identifier']:
+                record['jsonData']['identifier']['identifier'] = gen_unique_id()
+                record['jsonData']['identifier']['identifierType'] = 'internal'
             add_a_metadata_record(record['jsonData'], set_spec='Import')
 
 
