@@ -83,8 +83,12 @@ def generateXMLDataCite(root, jsonData):
         dates = ET.SubElement(root, 'dates')
         for dte in lstDates:
             date = ET.SubElement(dates, 'date')
-            date.text = dte['date']
             date.set('dateType', dte['dateType'])
+            if dte['date']['gte'] == dte['date']['lte']:
+                date.text = dte['date']['gte']
+            else:
+                date.text = '{}/{}'.format(
+                    dte['date']['gte'], dte['date']['lte'])
 
     if jsonData.get('language', '') != '':
         language = ET.SubElement(root, 'language')

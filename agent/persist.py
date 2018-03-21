@@ -4,6 +4,7 @@ from agent.config import token_index_name
 from datetime import datetime
 from elasticsearch_dsl import analyzer
 from elasticsearch_dsl import Date
+from elasticsearch_dsl import DateRange
 from elasticsearch_dsl import DocType
 from elasticsearch_dsl import Keyword
 from elasticsearch_dsl import Integer
@@ -42,6 +43,14 @@ class Metadata(DocType):
                         "path_match": "record.publicationYear",
                         "match_mapping_type": "string",
                         "mapping": Integer()
+                    }
+            },
+            {
+                "record":
+                    {
+                        "path_match": "record.dates.date",
+                        "match_mapping_type": "object",
+                        "mapping": DateRange()
                     }
             }
         ])

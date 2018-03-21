@@ -61,7 +61,8 @@ JSON_DICTS = [
             'nameIdentifier': '0000-0001-5000-0007',
             'nameIdentifierScheme': 'ORCID',
             'schemeURI': 'http://orcid.org/'}],
-        'dates': [{'date': '2015-10-17', 'dateType': 'Updated'}],
+        'dates': [{'date': '2015-01-01/2019-12-31',
+                   'dateType': 'Submitted'}],
         'description': [{
             'description': 'XML example of all DataCite '
                            'Metadata Schema v3.1 properties.',
@@ -165,7 +166,7 @@ JSON_DICTS = [
             },
             {
                 "date": "2017-02-03",
-                "dateType": "Issued"
+                "dateType": "Submitted"
             }
         ],
         "language": "eng",
@@ -241,8 +242,8 @@ JSON_DICTS = [
         "publisher": "UCT",
         "dates": [
             {
-                "date": "2018-01-22",
-                "dateType": "Accepted"
+                "date": "2018-10-01",
+                "dateType": "Collected"
             },
             {
                 "date": "2018-02-03",

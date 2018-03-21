@@ -1,6 +1,6 @@
 import json
 import requests
-# import time
+import time
 from agent.config import import_url
 from agent.config import import_user
 from agent.config import import_password
@@ -30,12 +30,13 @@ def import_metadata_records():
     # paths.append("Portals/test-mike/testcustmike/metadata")
     # paths.append('Institutions/coj/coj/metadata')
     # paths.append("Institutions/sa-risk-and-vulnerability-atlas/sarva/metadata")
-    paths.append("Institutions/geoss/geoss/metadata")
+    # paths.append("Institutions/geoss/geoss/metadata")
+    paths.append("Institutions/south-african-national-biodiversity-institute/south-african-national-biodiversity-institute")
     for path in paths:
         records = import_metadata_record(path)
         records = json.loads(records)
         for record in records['content']:
-            # time.sleep(1)
+            time.sleep(1)
             if not record['jsonData']['identifier']['identifier']:
                 record['jsonData']['identifier']['identifier'] = gen_unique_id()
                 record['jsonData']['identifier']['identifierType'] = 'internal'

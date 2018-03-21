@@ -12,6 +12,7 @@ from agent.search import search_all
 from agent.search import search
 from agent.utils import get_request_host
 from agent.utils import json_handler
+from agent.utils import format_json_dates
 from elasticsearch_dsl import Search
 import xml.etree.ElementTree as ET
 
@@ -42,11 +43,25 @@ class AgentAPI(object):
         if identifier == '':
             record['identifier'] = {}
 
+        rights = record.get('rights')
+        if rights == '':
+            record['rights'] = []
+
         dates = record.get('dates')
         lst = []
         for date_dict in dates:
             if date_dict.get('date', '') != '':
-                lst.append(date_dict)
+                new = dict()
+                if date_dict.get('dateType'):
+                    new['dateType'] = date_dict.get('dateType')
+                the_date = date_dict['date']
+                if '/' in the_date:
+                    the_dates = the_date.split('/')
+                    new['date'] = {'gte': the_dates[0], 'lte': the_dates[1]}
+                else:
+                    new['date'] = {'gte': the_date, 'lte': the_date}
+                lst.append(new)
+        print(lst)
         record['dates'] = lst
 
         # Metadata.init()
@@ -60,7 +75,8 @@ class AgentAPI(object):
         try:
             md.save()
         except Exception as e:
-            msg = "Error: {}: {}".format('Save failed', e)
+            msg = "Error: {}: {} - {}".format(
+                'Save failed', identifier, e)
             output['msg'] = msg
             return output
 
@@ -81,7 +97,7 @@ class AgentAPI(object):
 
     @cherrypy.expose
     @cherrypy.tools.json_out(handler=json_handler)
-    def read(self, **kwargs):
+    def search(self, **kwargs):
         output = {'success': False}
         if kwargs:
             new_kwargs = {}
@@ -96,13 +112,11 @@ class AgentAPI(object):
             output['error'] = response['error']
             return output
 
-        lines = []
-        for hit in response['result']:
-            lines.append(hit.to_dict())
+        items = format_json_dates(response['result'])
 
         output['success'] = True
-        output['result_length'] = len(lines)
-        output['results'] = lines
+        output['result_length'] = len(items)
+        output['results'] = items
 
         return output
 
@@ -151,20 +165,37 @@ class AgentAPI(object):
 
         root = ET.Element("html")
         body = ET.SubElement(root, "body")
-        child = ET.SubElement(body, "h3")
-        child.text = 'Welcome to SAEON Search Engine'
-        api = ET.SubElement(body, "h4")
-        api.text = 'REST API'
-        child = ET.SubElement(api, "br")
-        child = ET.SubElement(api, "a", {
-            'href': '{}/read'.format(url)
+        child = ET.SubElement(body, "h2")
+        child.text = 'Welcome to the SAEON Metadata Search Agent'
+        api = ET.SubElement(body, "h3")
+        api.text = 'Search API'
+        ET.SubElement(api, "br")
+        search = ET.SubElement(api, "a", {
+            'href': '{}/search'.format(url)
         })
-        child.text = 'Read'
+        search.text = 'Search'
+        child = ET.SubElement(api, "br")
+        child = ET.SubElement(api, "span", {
+            'style': 'font-size: 12'})
+        child.text = 'Arguments:'
+        child = ET.SubElement(api, "br")
+        child = ET.SubElement(api, "span", {
+            'style': 'font-size: 12'})
+        child.text = '* field/value pairs: provide any number of fields with the search value'
+        child = ET.SubElement(api, "br")
+        child = ET.SubElement(api, "span", {
+            'style': 'font-size: 12'})
+        child.text = '* "fields": limit output to only fields given in this comma separated list'
+        child = ET.SubElement(api, "br")
+        child = ET.SubElement(api, "span", {
+            'style': 'font-size: 12'})
+        child.text = '* "sort": sort results by the given field in ascending order'
 
         # OAI-PMH
-        oai = ET.SubElement(body, "h4")
+        oai = ET.SubElement(body, "h3")
         oai.text = 'OAI-Protocal for Metadata Harverting'
-        verbs = ET.SubElement(oai, "p")
+        child = ET.SubElement(oai, "br")
+        verbs = ET.SubElement(oai, "span")
         verbs.text = 'Verbs'
         child = ET.SubElement(verbs, "br")
 

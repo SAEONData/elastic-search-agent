@@ -1,3 +1,4 @@
+from agent.utils import format_json_date
 import xml.etree.ElementTree as ET
 
 
@@ -37,10 +38,24 @@ def generateXMLDC(root, jsonData):
                 child = ET.SubElement(oai_dc, 'dc:subject')
                 child.text = subject
 
-    year = jsonData.get('publicationYear')
-    if year:
+    dates = jsonData.get('dates', [])
+    dc_date = None
+    for adate in dates:
+        if adate.get('dateType') and \
+           adate.get('dateType') == 'Submitted' and \
+           adate.get('date'):
+            format_json_date(adate)
+            dc_date = adate.get('date')
+            break
+
+    if dc_date is None:
+        year = jsonData.get('publicationYear')
+        if year:
+            dc_date = year
+
+    if dc_date is not None:
         child = ET.SubElement(oai_dc, 'dc:date')
-        child.text = year
+        child.text = dc_date
 
     if jsonData.get('resourceType', '') != '':
         child = ET.SubElement(oai_dc, 'dc:type', {

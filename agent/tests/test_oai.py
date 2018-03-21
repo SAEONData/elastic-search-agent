@@ -106,6 +106,6 @@ def list_identifiers():
 
 
 if __name__ == "__main__":
-    # list_identeifiers_bad_verb()
-    # list_identeifiers_bad_arg()
+    list_identeifiers_bad_verb()
+    list_identeifiers_bad_arg()
     list_identifiers()

@@ -26,7 +26,8 @@ SIZE = 10
 def add_resumption_token(size, cursor):
     rs = ResumptionToken(md_size=size, md_cursor=cursor)
     rs.save()
-    print('add_resumption_token: {} {} {}'.format(size, cursor, rs.md_token))
+    # print('add_resumption_token: {} {} {}'.format(
+    #     size, cursor, rs.md_token))
     return rs.md_token
 
 
@@ -81,6 +82,7 @@ def format_records(root, records, prefix, md_token=None):
                     el_record, record.to_dict().get('record'))
         except AttributeError as e:
             print('AttributeError: {}'.format(e))
+            raise
 
     if md_token:
         child = ET.SubElement(root, 'resumptionToken')
@@ -219,7 +221,7 @@ def list_results(root, request_element, form, **kwargs):
         try:
             from_date = datetime.strptime(from_date, '%Y-%m-%d')
         except Exception as e:
-            print('Until date format error {}'.format(e))
+            print('from date format error {}'.format(e))
             child = ET.SubElement(root, 'error', {'code': 'badArgument'})
             child.text = 'from date {} format should be YYYY-MM-DD'.format(
                 from_date)
@@ -240,17 +242,21 @@ def list_results(root, request_element, form, **kwargs):
     query = {'bool': {'must': q_list}}
     if from_date and until_date:
         dates = {'record.dates.date': {
-            'from': from_date,
-            'to': until_date}}
+            'gte': from_date,
+            'lte': until_date,
+            'relation': 'within'}}
+        print('dates: {}'.format(dates))
         q_list.append(Q({"range": dates}))
     elif from_date:
         dates = {'record.dates.date': {
-            'from': from_date}}
+            'gte': from_date}}
         q_list.append(Q({"range": dates}))
+        print('dates: {}'.format(dates))
     elif until_date:
         dates = {'record.dates.date': {
-            'to': until_date}}
+            'lte': until_date}}
         q_list.append(Q({"range": dates}))
+        print('dates: {}'.format(dates))
     srch.query = query
     srch = srch.sort('record.identifier.identifier')
     srch = srch[md_cursor:end_cursor]
