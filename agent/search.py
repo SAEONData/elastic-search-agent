@@ -21,7 +21,7 @@ def search(**kwargs):
     sort_field = None
     from_date = None
     to_date = None
-    start = 0
+    start = 1
     size = 100
     q_list = []
     for key in kwargs:
