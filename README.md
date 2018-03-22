@@ -1,4 +1,4 @@
-#Metadata Search Agent using Elastic Search
+# Metadata Search Agent using Elastic Search
 
 ## Deployment
 
@@ -27,16 +27,16 @@ Run the following commands to create an elasticsearch instance for the Agent:
 
 ## Usage
 
-###Search API
+### Search API
 Arguments:
 * field/value pairs: provide any number of fields with the search value
 * "fields": limit output to only fields given in this comma separated list
 * "sort": sort results by the given field in ascending order
 
-###OAI - Protocal for Metadata Harverting
+### OAI - Protocal for Metadata Harverting
 See more details here (http://www.openarchives.org/pmh)
 
-####Available Verbs
+#### Available Verbs
 * Identity
 * ListMetadataFormats
 * ListIdentifiers
