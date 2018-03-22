@@ -1,9 +1,10 @@
-# Elastic Search Agent for Handling Metadata
+#Metadata Search Agent using Elastic Search
 
 ## Deployment
 
 ### System dependencies
 * python3 (&ge; 3.6)
+* elasticssearch
 * elasticssearch_dsl
 
 ### Package dependencies
@@ -24,5 +25,18 @@ Run the following commands to create an elasticsearch instance for the Agent:
     sudo service elasticsearch start
 
 
-### Usage
-add
+## Usage
+###Search API
+Arguments:
+* field/value pairs: provide any number of fields with the search value
+* "fields": limit output to only fields given in this comma separated list
+* "sort": sort results by the given field in ascending order
+
+###OAI - Protocal for Metadata Harverting
+`http://www.openarchives.org/pmh/`
+####Available Verbs
+* Identity
+* ListMetadataFormats
+* ListIdentifiers
+* ListRecords
+* GetRecord
