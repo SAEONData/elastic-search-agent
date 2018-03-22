@@ -31,9 +31,10 @@ Run the following commands to create an elasticsearch instance for the Agent:
 Arguments:
 * field/value pairs: provide any number of fields with the search value
 * "fields": limit output to only fields given in this comma separated list
-* "sort": sort results by the given field in ascending order
 * "from": from date
 * "to": to date
+* "sort": sort results by the given field in ascending order
+* "start": position of the first record returned, default is 1
 * "size": number of results, default is 100
 
 ### OAI - Protocal for Metadata Harverting

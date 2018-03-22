@@ -21,12 +21,16 @@ def search(**kwargs):
     sort_field = None
     from_date = None
     to_date = None
+    start = 0
     size = 100
     q_list = []
     for key in kwargs:
         # print('------------------------' + key)
         if key == 'record.fields':
             source_fields = kwargs[key]
+            continue
+        elif key == 'record.start':
+            start = kwargs[key]
             continue
         elif key == 'record.size':
             size = kwargs[key]
@@ -125,7 +129,35 @@ def search(**kwargs):
         print('dates: {}'.format(dates))
 
     srch.query = {'bool': {'must': q_list}}
-    srch.update_from_dict({'size': size})
+
+    try:
+        start = int(start)
+    except Exception as e:
+        msg = 'start {} must be an integer'.format(start)
+        output['error'] = msg
+        return output
+
+    if start <= 0:
+        msg = 'start must be greater that zero'
+        output['error'] = msg
+        return output
+
+    start -= 1
+
+    try:
+        size = int(size)
+    except Exception as e:
+        msg = 'size {} must be an integer'.format(size)
+        output['error'] = msg
+        return output
+    if size < 0:
+        msg = 'size must be greater that zero'
+        output['error'] = msg
+        return output
+    size = size + start
+
+    print('page {} - {}'.format(start, size))
+    srch = srch[start: size]
 
     try:
         output['result'] = srch.execute()

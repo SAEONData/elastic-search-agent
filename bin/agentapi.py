@@ -198,6 +198,14 @@ class AgentAPI(object):
         child = ET.SubElement(api, "span", {
             'style': 'font-size: 12'})
         child.text = '* "sort": sort results by the given field in ascending order'
+        child = ET.SubElement(api, "br")
+        child = ET.SubElement(api, "span", {
+            'style': 'font-size: 12'})
+        child.text = '* "start": position of the first record returned, default is 1'
+        child = ET.SubElement(api, "br")
+        child = ET.SubElement(api, "span", {
+            'style': 'font-size: 12'})
+        child.text = '* "size": number of records - default is 100'
 
         # OAI-PMH
         oai = ET.SubElement(body, "h3")
