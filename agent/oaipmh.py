@@ -246,7 +246,7 @@ def list_results(root, request_element, form, **kwargs):
         dates = {'record.dates.date': {
             'gte': from_date,
             'lte': until_date,
-            'relation': 'within'}}
+            'relation': 'intersects'}}
         print('dates: {}'.format(dates))
         q_list.append(Q({"range": dates}))
     elif from_date:

@@ -189,6 +189,14 @@ class AgentAPI(object):
         child = ET.SubElement(api, "br")
         child = ET.SubElement(api, "span", {
             'style': 'font-size: 12'})
+        child.text = '* "from": from date'
+        child = ET.SubElement(api, "br")
+        child = ET.SubElement(api, "span", {
+            'style': 'font-size: 12'})
+        child.text = '* "to": to date'
+        child = ET.SubElement(api, "br")
+        child = ET.SubElement(api, "span", {
+            'style': 'font-size: 12'})
         child.text = '* "sort": sort results by the given field in ascending order'
 
         # OAI-PMH

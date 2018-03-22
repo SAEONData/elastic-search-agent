@@ -1,3 +1,4 @@
+from datetime import datetime
 from agent.config import metadata_index_name
 from agent.persist import Metadata
 from elasticsearch.exceptions import TransportError
@@ -18,6 +19,8 @@ def search(**kwargs):
     srch = Metadata.search()
     source_fields = ''
     sort_field = None
+    from_date = None
+    to_date = None
     size = 100
     q_list = []
     for key in kwargs:
@@ -30,6 +33,12 @@ def search(**kwargs):
             continue
         elif key == 'record.sort':
             sort_field = kwargs[key]
+            continue
+        elif key == 'record.from':
+            from_date = kwargs[key]
+            continue
+        elif key == 'record.to':
+            to_date = kwargs[key]
             continue
         # Otherwise add to query
         field_type = mapping.resolve_field(key)
@@ -44,9 +53,6 @@ def search(**kwargs):
             output['error'] = msg
             return output
         q_list.append(Q({"match": {key: kwargs[key]}}))
-
-    srch.query = {'bool': {'must': q_list}}
-    srch.update_from_dict({'size': size})
 
     if sort_field:
         # print('Sort on {}'.format(sort_field))
@@ -81,6 +87,46 @@ def search(**kwargs):
                 return output
             new_fields.append(field_name)
         srch = srch.source(new_fields)
+
+    if from_date:
+        try:
+            from_date = datetime.strptime(from_date, '%Y-%m-%d')
+        except Exception as e:
+            msg = 'from date {} format should be YYYY-MM-DD'.format(
+                from_date)
+            output['error'] = msg
+            return output
+
+    if to_date:
+        try:
+            to_date = datetime.strptime(to_date, '%Y-%m-%d')
+        except Exception as e:
+            msg = 'to date {} format should be YYYY-MM-DD'.format(
+                to_date)
+            output['error'] = msg
+            return output
+
+    if from_date and to_date:
+        dates = {'record.dates.date': {
+            'gte': from_date,
+            'lte': to_date,
+            'relation': 'intersects'}}
+        print('dates: {}'.format(dates))
+        q_list.append(Q({"range": dates}))
+    elif from_date:
+        dates = {'record.dates.date': {
+            'gte': from_date}}
+        q_list.append(Q({"range": dates}))
+        print('dates: {}'.format(dates))
+    elif to_date:
+        dates = {'record.dates.date': {
+            'lte': to_date}}
+        q_list.append(Q({"range": dates}))
+        print('dates: {}'.format(dates))
+
+    srch.query = {'bool': {'must': q_list}}
+    srch.update_from_dict({'size': size})
+
     try:
         output['result'] = srch.execute()
         output['success'] = True
