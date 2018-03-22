@@ -34,9 +34,12 @@ def import_metadata_records():
     paths.append("Institutions/south-african-national-biodiversity-institute/south-african-national-biodiversity-institute")
     for path in paths:
         records = import_metadata_record(path)
+        if records.startswith('There is nothing here'):
+            print('\n### Unauthorised to access {}\n'.format(path))
+            continue
         records = json.loads(records)
         for record in records['content']:
-            time.sleep(1)
+            time.sleep(0.5)
             if not record['jsonData']['identifier']['identifier']:
                 record['jsonData']['identifier']['identifier'] = gen_unique_id()
                 record['jsonData']['identifier']['identifierType'] = 'internal'
