@@ -26,6 +26,7 @@ Run the following commands to create an elasticsearch instance for the Agent:
 
 
 ## Usage
+
 ###Search API
 Arguments:
 * field/value pairs: provide any number of fields with the search value
@@ -33,7 +34,8 @@ Arguments:
 * "sort": sort results by the given field in ascending order
 
 ###OAI - Protocal for Metadata Harverting
-`http://www.openarchives.org/pmh/`
+See more details here (http://www.openarchives.org/pmh)
+
 ####Available Verbs
 * Identity
 * ListMetadataFormats
