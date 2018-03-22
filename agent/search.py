@@ -38,6 +38,7 @@ def search(**kwargs):
             field_name = '.'.join(key.split('.')[1:])
             msg = 'Unknown search field: {}'.format(field_name)
             output['error'] = msg
+            return output
         if type(field_type).name in ['object', ]:
             msg = 'Cannot search on field: {}'.format(field_name)
             output['error'] = msg

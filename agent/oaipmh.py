@@ -15,6 +15,7 @@ from agent.oai_dc_export import generateXMLDC
 from agent.persist import Metadata
 from agent.persist import ResumptionToken
 from agent.search import search
+from agent.utils import get_dc_date
 from agent.utils import get_request_host
 from datetime import datetime
 from elasticsearch_dsl import Q
@@ -49,10 +50,11 @@ def format_identifier(root, record):
             child = ET.SubElement(el_header, 'identifier')
             child.text = record['identifier']['identifier']
 
-        date = record.get('publicationYear', None)
-        if date:
+        dc_date = get_dc_date(record)
+        if dc_date:
+            dc_date = dc_date.split('/')[0]
             child = ET.SubElement(el_header, 'datestamp')
-            child.text = date
+            child.text = dc_date
 
         if set_spec:
             child = ET.SubElement(el_header, 'setSpec')

@@ -41,8 +41,9 @@ def get_request_host(request):
     return host
 
 
-def format_json_date(date_dict):
+def format_json_date(date_in):
     # Convert a date
+    date_dict = dict(date_in)
     if date_dict.get('date'):
         if date_dict['date']['gte'] == date_dict['date']['lte']:
             date_dict['date'] = date_dict['date']['gte']
@@ -50,6 +51,7 @@ def format_json_date(date_dict):
             date_dict['date'] = '{}/{}'.format(
                 date_dict['date']['gte'],
                 date_dict['date']['lte'])
+    return date_dict
 
 
 def format_json_dates(hits):
@@ -57,8 +59,29 @@ def format_json_dates(hits):
     results = []
     for result in hits:
         result = result.to_dict()
+        new_dates = []
         for dates in result['record'].get('dates', []):
-            format_json_date(dates)
+            new_dates.append(format_json_date(dates))
+        result['record']['dates'] = new_dates
         results.append(result)
 
     return results
+
+
+def get_dc_date(jsonData):
+    dates = jsonData.get('dates', [])
+    dc_date = None
+    for adate in dates:
+        if adate.get('dateType') and \
+           adate.get('dateType') == 'Submitted' and \
+           adate.get('date'):
+            dates_dict = format_json_date(adate)
+            dc_date = dates_dict.get('date')
+            break
+
+    if dc_date is None:
+        year = jsonData.get('publicationYear')
+        if year:
+            dc_date = year
+
+    return dc_date
