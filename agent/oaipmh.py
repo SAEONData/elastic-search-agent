@@ -178,7 +178,7 @@ def list_results(root, request_element, form, **kwargs):
     from_date = None
     until_date = None
     prefix = 'datacite'
-    q_list = []
+    query = dict()
     for k in kwargs:
         if k == 'verb':
             # ignore
@@ -187,7 +187,7 @@ def list_results(root, request_element, form, **kwargs):
         if k == 'metadataPrefix':
             prefix = kwargs[k]
         elif k == 'set':
-            q_list.append(Q({"match": {'set_spec': kwargs[k]}}))
+            query['set_spec'] = kwargs[k]
         elif k == 'from':
             from_date = kwargs[k]
         elif k == 'until':
@@ -208,7 +208,8 @@ def list_results(root, request_element, form, **kwargs):
     # Ensure metadataPrefix can be handled
     if prefix not in ['datacite', 'oai_dc', 'oai_datacite']:
         child = ET.SubElement(root, 'error', {'code': 'badArgument'})
-        child.text = 'metadataPrefix "{}" cannot be processed'.format(prefix)
+        child.text = 'metadataPrefix "{}" cannot be processed'.format(
+            prefix)
         return root
 
     # Get resumptionToken
@@ -221,7 +222,7 @@ def list_results(root, request_element, form, **kwargs):
 
     if from_date:
         try:
-            from_date = datetime.strptime(from_date, '%Y-%m-%d')
+            datetime.strptime(from_date, '%Y-%m-%d')
         except Exception as e:
             print('from date format error {}'.format(e))
             child = ET.SubElement(root, 'error', {'code': 'badArgument'})
@@ -231,7 +232,7 @@ def list_results(root, request_element, form, **kwargs):
 
     if until_date:
         try:
-            until_date = datetime.strptime(until_date, '%Y-%m-%d')
+            datetime.strptime(until_date, '%Y-%m-%d')
         except Exception as e:
             print('Until date format error {}'.format(e))
             child = ET.SubElement(root, 'error', {'code': 'badArgument'})
@@ -239,37 +240,27 @@ def list_results(root, request_element, form, **kwargs):
                 until_date)
             return root
 
-    end_cursor = md_cursor + SIZE
-    srch = Metadata.search()
-    query = {'bool': {'must': q_list}}
-    if from_date and until_date:
-        dates = {'record.dates.date': {
-            'gte': from_date,
-            'lte': until_date,
-            'relation': 'intersects'}}
-        print('dates: {}'.format(dates))
-        q_list.append(Q({"range": dates}))
-    elif from_date:
-        dates = {'record.dates.date': {
-            'gte': from_date}}
-        q_list.append(Q({"range": dates}))
-        print('dates: {}'.format(dates))
-    elif until_date:
-        dates = {'record.dates.date': {
-            'lte': until_date}}
-        q_list.append(Q({"range": dates}))
-        print('dates: {}'.format(dates))
-    srch.query = query
-    srch = srch.sort('record.identifier.identifier')
-    srch = srch[md_cursor:end_cursor]
-    records = srch.execute()
-    records = [r for r in records]
+    if from_date:
+        query['record.from'] = from_date
+    if until_date:
+        query['record.to'] = until_date
+    query['record.sort'] = 'identifier.identifier'
+    query['record.start'] = md_cursor + 1
+    query['record.size'] = SIZE
+
+    response = search(**query)
+    if not response.get('success', False):
+        child = ET.SubElement(root, 'error', {'code': 'badArgument'})
+        child.text = response['error']
+        return root
+    records = [r for r in response['result']]
     if len(records) == 0:
         child = ET.SubElement(root, 'error', {'code': 'noRecordsMatch'})
         return root
     # print(', '.join([r.doc_type for r in records]))
     new_token = None
-    if len(records) == SIZE and end_cursor != srch.count():
+    end_cursor = md_cursor + SIZE
+    if len(records) == SIZE and end_cursor != response.get('count', 0):
         new_token = add_resumption_token(size=SIZE, cursor=end_cursor)
     if form == 'records':
         if prefix == 'oai_datacite':

@@ -49,7 +49,7 @@ def search(**kwargs):
         field_name = '.'.join(key.split('.')[1:])
         if field_type is None:
             field_name = '.'.join(key.split('.')[1:])
-            msg = 'Unknown search field: {}'.format(field_name)
+            msg = 'Unknown search field: {} {}'.format(key, field_name)
             output['error'] = msg
             return output
         if type(field_type).name in ['object', ]:
@@ -161,6 +161,8 @@ def search(**kwargs):
 
     try:
         output['result'] = srch.execute()
+        output['count'] = srch.count()
+        print('count {}'.format(srch.count()))
         output['success'] = True
     except TransportError as e:
         if e.error == 'search_phase_execution_exception':
