@@ -23,6 +23,8 @@ html_strip = analyzer(
 
 class Metadata(DocType):
     created_at = Date()
+    set_spec = Text()
+    record_id = Keyword()
     record = Object()
 
     class Meta:

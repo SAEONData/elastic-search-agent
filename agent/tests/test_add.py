@@ -103,7 +103,7 @@ JSON_DICTS = [
         'sizes': ['3KB', '25ml'],
         'subjects': [{
             'schemeURI': 'http://dewey.info/',
-            'subject': '000 computer science',
+            'subject': 'computer science',
             'subjectScheme': 'dewey'}],
         'subtitle': '',
         'title': 'Full DataCite XML Example',

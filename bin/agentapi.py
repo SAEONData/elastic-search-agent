@@ -38,15 +38,23 @@ class AgentAPI(object):
 
         set_spec = kwargs.get('set_spec', '')
 
-        # Hacks to fix records
-        identifier = record.get('identifier')
+        try:
+            identifier = record['identifier']['identifier']
+        except:
+            msg = "identifier is required"
+            output['msg'] = msg
+            return output
         if identifier == '':
-            record['identifier'] = {}
+            msg = "identifier is required"
+            output['msg'] = msg
+            return output
 
+        # Hack to fix rights
         rights = record.get('rights')
         if rights == '':
             record['rights'] = []
 
+        # Hack to fix dates
         dates = record.get('dates')
         lst = []
         for date_dict in dates:
@@ -61,12 +69,20 @@ class AgentAPI(object):
                 else:
                     new['date'] = {'gte': the_date, 'lte': the_date}
                 lst.append(new)
-        print(lst)
+        # print(lst)
         record['dates'] = lst
+
+        # Replace record if it already exists ie. delete first
+        srch = Metadata.search()
+        srch = srch.filter('match', record_id=identifier)
+        srch.execute()
+        if srch.count() == 1:
+            srch.delete()
 
         # Metadata.init()
         try:
-            md = Metadata(record=record, set_spec=set_spec)
+            md = Metadata(
+                record=record, record_id=identifier, set_spec=set_spec)
         except Exception as e:
             msg = "Error: {}: {}".format('Creation failed', e)
             output['msg'] = msg
