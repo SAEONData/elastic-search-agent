@@ -30,7 +30,7 @@ Run the following commands to create an elasticsearch instance for the Agent:
 ### JSON API
 #### search
 Return selected records in a 'SAEON JSON DataCite' format
-Arguments:
+##### Arguments:
 * field/value pairs: provide any number of fields with the search value
 * "fields": limit output to only fields given in this comma separated list
 * "from": from date
@@ -41,13 +41,13 @@ Arguments:
 
 #### add
 Add a record to a collection
-Arguments:
+##### Arguments:
 * record: json dict in 'SAEON JSON DataCite' format
 * spec_set: optional name of collection
 
 #### delete
 Delete a given record
-Arguments:
+##### Arguments:
 * record_id: record identifier to be deleted
 * force: optional to force deletion of duplicated records 
 
