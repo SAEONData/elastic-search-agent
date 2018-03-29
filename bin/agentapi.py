@@ -112,6 +112,37 @@ class AgentAPI(object):
         return output
 
     @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def delete(self, **kwargs):
+        output = {'success': False}
+        cherrypy.log('delete_all')
+        record_id = kwargs.get('record_id')
+        if record_id is None:
+            msg = "Error: 'record_id' argument is required"
+            output['msg'] = msg
+            return output
+
+        force = kwargs.get('force', 'false').lower() == 'true'
+
+        srch = Metadata.search()
+        srch = srch.filter('match', record_id=record_id)
+        srch.execute()
+        if srch.count() == 0:
+            msg = "Error: record {} not found".format(record_id)
+            output['msg'] = msg
+            return output
+        if srch.count() > 1 and not force:
+            msg = "Error: duplicate records found with id {}. ".format(
+                record_id)
+            msg.append('Use force=true argument to delete all duplicates')
+            output['msg'] = msg
+            return output
+        srch.delete()
+        output['success'] = True
+        output['msg'] = 'Record {} deleted'.format(record_id)
+        return output
+
+    @cherrypy.expose
     @cherrypy.tools.json_out(handler=json_handler)
     def search(self, **kwargs):
         output = {'success': False}
