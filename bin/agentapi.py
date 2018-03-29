@@ -215,12 +215,16 @@ class AgentAPI(object):
         child = ET.SubElement(body, "h2")
         child.text = 'Welcome to the SAEON Metadata Search Agent'
         api = ET.SubElement(body, "h3")
-        api.text = 'Search API'
+        api.text = 'JSON API'
         ET.SubElement(api, "br")
         search = ET.SubElement(api, "a", {
             'href': '{}/search'.format(url)
         })
         search.text = 'Search'
+        child = ET.SubElement(api, "br")
+        child = ET.SubElement(api, "span", {
+            'style': 'font-size: 12'})
+        child.text = "Return selected records in a 'SAEON JSON DataCite' format"
         child = ET.SubElement(api, "br")
         child = ET.SubElement(api, "span", {
             'style': 'font-size: 12'})
@@ -254,6 +258,53 @@ class AgentAPI(object):
             'style': 'font-size: 12'})
         child.text = '* "size": number of records - default is 100'
 
+        # Add
+        child = ET.SubElement(api, "br")
+        child = ET.SubElement(api, "br")
+        add = ET.SubElement(api, "a", {
+            'href': '{}/add'.format(url)
+        })
+        add.text = 'Add'
+        child = ET.SubElement(api, "br")
+        child = ET.SubElement(api, "span", {
+            'style': 'font-size: 12'})
+        child.text = "Add a record to a collection"
+        child = ET.SubElement(api, "br")
+        child = ET.SubElement(api, "span", {
+            'style': 'font-size: 12'})
+        child.text = 'Arguments:'
+        child = ET.SubElement(api, "br")
+        child = ET.SubElement(api, "span", {
+            'style': 'font-size: 12'})
+        child.text = "* record: json dict in 'SAEON JSON DataCite' format"
+        child = ET.SubElement(api, "br")
+        child = ET.SubElement(api, "span", {
+            'style': 'font-size: 12'})
+        child.text = "* spec_set: optional name of collection"
+
+        # Delete
+        child = ET.SubElement(api, "br")
+        child = ET.SubElement(api, "br")
+        add = ET.SubElement(api, "a", {
+            'href': '{}/delete'.format(url)
+        })
+        add.text = 'Delete'
+        child = ET.SubElement(api, "br")
+        child = ET.SubElement(api, "span", {
+            'style': 'font-size: 12'})
+        child.text = "Delete a given record"
+        child = ET.SubElement(api, "br")
+        child = ET.SubElement(api, "span", {
+            'style': 'font-size: 12'})
+        child.text = 'Arguments:'
+        child = ET.SubElement(api, "br")
+        child = ET.SubElement(api, "span", {
+            'style': 'font-size: 12'})
+        child.text = "* record_id: record identifier to be deleted"
+        child = ET.SubElement(api, "br")
+        child = ET.SubElement(api, "span", {
+            'style': 'font-size: 12'})
+        child.text = "* force: optional to force deletion of duplicated records"
         # OAI-PMH
         oai = ET.SubElement(body, "h3")
         oai.text = 'OAI-Protocal for Metadata Harverting'
