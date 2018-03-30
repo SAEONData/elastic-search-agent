@@ -318,7 +318,22 @@ class AgentAPI(object):
         child = ET.SubElement(api, "span", {
             'style': 'font-size: 12'})
         child.text = "* force: optional to force deletion of duplicated records"
+
+        # Faceted Search
+        child = ET.SubElement(api, "br")
+        child = ET.SubElement(api, "br")
+        search = ET.SubElement(api, "a", {
+            'href': '{}/faceted_search'.format(url)
+        })
+        search.text = 'Faceted Search'
+        child = ET.SubElement(api, "br")
+        child = ET.SubElement(api, "span", {
+            'style': 'font-size: 12'})
+        child.text = "Return all known facets"
+
         # OAI-PMH
+        child = ET.SubElement(api, "br")
+        child = ET.SubElement(api, "br")
         oai = ET.SubElement(body, "h3")
         oai.text = 'OAI-Protocal for Metadata Harverting'
         child = ET.SubElement(oai, "br")

@@ -54,6 +54,9 @@ Delete a given record
 #### delete_all
 Delete all records
 
+#### faceted_search
+Return all known facets
+
 
 ### OAI - Protocal for Metadata Harverting
 See more details here (http://www.openarchives.org/pmh)
