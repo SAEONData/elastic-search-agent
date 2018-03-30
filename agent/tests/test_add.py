@@ -208,6 +208,11 @@ JSON_DICTS = [
                 "subject": "SOC"
             },
             {
+                "subjectScheme": "Dewey",
+                "schemeURI": "http://dewey.info/",
+                "subject": "Computer Software"
+            },
+            {
                 "subjectScheme": "",
                 "schemeURI": "",
                 "subject": "COS"
@@ -236,10 +241,10 @@ JSON_DICTS = [
         "creators": [
             {
                 "creatorName": "Prof J Soap",
-                "affiliation": "UCT"
+                "affiliation": "University Of Cape Town"
             }
         ],
-        "publisher": "UCT",
+        "publisher": "University Of Cape Town",
         "dates": [
             {
                 "date": "2018-10-01",

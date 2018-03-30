@@ -42,9 +42,33 @@ class Metadata(DocType):
             {
                 "record":
                     {
+                        "path_match": "record.subjects.subject",
+                        "match_mapping_type": "string",
+                        "mapping": Text(fields={'raw': Keyword()}),
+                    }
+            },
+            {
+                "record":
+                    {
+                        "path_match": "record.creators.creatorName",
+                        "match_mapping_type": "string",
+                        "mapping": Text(fields={'raw': Keyword()}),
+                    }
+            },
+            {
+                "record":
+                    {
                         "path_match": "record.publicationYear",
                         "match_mapping_type": "string",
                         "mapping": Integer()
+                    }
+            },
+            {
+                "record":
+                    {
+                        "path_match": "record.publisher",
+                        "match_mapping_type": "string",
+                        "mapping": Text(fields={'raw': Keyword()}),
                     }
             },
             {

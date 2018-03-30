@@ -7,7 +7,7 @@ from agent.config import server_port
 from agent.config import token_index_name
 from agent.oaipmh import process_request
 from agent.persist import Metadata
-from agent.search import FacetedSearch
+from agent.search import MetadataSearch
 from agent.search import search_all
 from agent.search import search
 from agent.utils import get_request_host
@@ -173,15 +173,28 @@ class AgentAPI(object):
         output = {'success': False}
         subjects = kwargs.get('subjects', '')
         try:
-            fs = FacetedSearch(subjects)
+            # fs = MetadataSearch(subjects, filters={'record.publicationYear': '2014'})
+            fs = MetadataSearch(subjects)
+            aa = fs.build_search()
+            print(aa.to_dict())
             response = fs.execute()
         except Exception as e:
             msg = 'Error: faceted_search failed with {}'.format(e)
             output['msg'] = msg
             return output
+        print(response.hits.total, 'hits total')
+
+        facet_response = response.facets.to_dict()
+
+        aggs = response.aggregations.to_dict()
+        print(aggs)
+
         lines = []
-        for hit in response:
-            lines.append(hit.to_dict())
+        for facet_name in facet_response:
+            facet_result = dict()
+            for (value, count, selected) in facet_response[facet_name]:
+                facet_result[value] = count
+            lines.append({facet_name: facet_result})
 
         output['success'] = True
         output['result_length'] = len(lines)

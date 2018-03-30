@@ -2,9 +2,11 @@ from datetime import datetime
 from agent.config import metadata_index_name
 from agent.persist import Metadata
 from elasticsearch.exceptions import TransportError
+from elasticsearch_dsl import DateHistogramFacet
 from elasticsearch_dsl import FacetedSearch
 from elasticsearch_dsl import Mapping
 from elasticsearch_dsl import Q
+# from elasticsearch_dsl import RangeFacet
 from elasticsearch_dsl import TermsFacet
 
 
@@ -178,15 +180,27 @@ def search(**kwargs):
 
 class MetadataSearch(FacetedSearch):
     doc_types = [Metadata, ]
+    index = metadata_index_name
 
-    fields = ['title', 'content.subjects.subject']
+    fields = [
+        # 'record.publicationYear',
+        # 'record.subjects.subject.raw',
+        # 'record.creators.creatorName.raw',
+        # 'record.publisher.raw',
+        # 'record.dates.date',
+    ]
 
     facets = {
-        # 'creator': TermsFacet(field='content.creators.creatorName'),
-        'subject': TermsFacet(field='content.subjects.subject'),
+        'subjects': TermsFacet(field='record.subjects.subject.raw'),
+        'creators': TermsFacet(field='record.creators.creatorName.raw'),
+        # 'dates': DateHistogramFacet(field='record.dates.date.gte', interval="month"),
+        # 'dates': RangeFacet(field='record.dates.date.gte', format="MM-yy", ranges=[
+        #     ("to", "now-10M/M"), ("from", "now-10M/M")]),
+        'publicationYear': TermsFacet(field='record.publicationYear'),
+        'publisher': TermsFacet(field='record.publisher.raw'),
     }
 
-    def search(self):
-        # override methods to add custom pieces
-        s = super().search()
-        return s.filter()
+    # def search(self):
+    #     # override methods to add custom pieces
+    #     s = super(MetadataSearch, self).search()
+    #     return s.filter()
