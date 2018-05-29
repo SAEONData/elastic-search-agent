@@ -7,8 +7,8 @@ server_url = 'http://localhost:{}'.format(server_port)
 
 # ES details
 es_port = 9200
-metadata_index_name = 'md_index_133'
-token_index_name = 'rt_index_133'
+metadata_index_name = 'md_index_13'
+token_index_name = 'rt_index_13'
 es_connection = connections.create_connection(
     hosts=['localhost:{}'.format(es_port)],
     timeout=20)

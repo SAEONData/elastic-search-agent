@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 from agent.config import metadata_index_name
 from agent.persist import Metadata
@@ -6,8 +7,9 @@ from elasticsearch_dsl import DateHistogramFacet
 from elasticsearch_dsl import FacetedSearch
 from elasticsearch_dsl import Mapping
 from elasticsearch_dsl import Q
-# from elasticsearch_dsl import RangeFacet
 from elasticsearch_dsl import TermsFacet
+
+logger = logging.getLogger(__name__)
 
 
 def search_all():
@@ -27,7 +29,7 @@ def search(**kwargs):
     size = 100
     q_list = []
     for key in kwargs:
-        # print('------------------------' + key)
+        logger.debug('------------------------' + key)
         if key == 'record.fields':
             source_fields = kwargs[key]
             continue
@@ -61,7 +63,7 @@ def search(**kwargs):
         q_list.append(Q({"match": {key: kwargs[key]}}))
 
     if sort_field:
-        # print('Sort on {}'.format(sort_field))
+        logger.debug('Sort on {}'.format(sort_field))
         if sort_field.startswith('-'):
             sort_field = sort_field[1:]
             sort_field_name = 'record.{}'.format(sort_field)
@@ -85,7 +87,7 @@ def search(**kwargs):
         new_fields = []
         for field in source_fields.split(','):
             field = field.strip()
-            # print('limit output field: record.{}'.format(field))
+            logger.debug('limit output field: record.{}'.format(field))
             field_name = 'record.{}'.format(field)
             if mapping.resolve_field(field_name) is None:
                 msg = 'Unknown source field: {}'.format(field)
@@ -117,18 +119,18 @@ def search(**kwargs):
             'gte': from_date,
             'lte': to_date,
             'relation': 'intersects'}}
-        print('dates: {}'.format(dates))
+        logger.debug('dates: {}'.format(dates))
         q_list.append(Q({"range": dates}))
     elif from_date:
         dates = {'record.dates.date': {
             'gte': from_date}}
         q_list.append(Q({"range": dates}))
-        print('dates: {}'.format(dates))
+        logger.debug('dates: {}'.format(dates))
     elif to_date:
         dates = {'record.dates.date': {
             'lte': to_date}}
         q_list.append(Q({"range": dates}))
-        print('dates: {}'.format(dates))
+        logger.debug('dates: {}'.format(dates))
 
     srch.query = {'bool': {'must': q_list}}
 
@@ -158,13 +160,13 @@ def search(**kwargs):
         return output
     size = size + start
 
-    print('page {} - {}'.format(start, size))
+    logger.debug('page {} - {}'.format(start, size))
     srch = srch[start: size]
 
     try:
         output['result'] = srch.execute()
         output['count'] = srch.count()
-        print('count {}'.format(srch.count()))
+        logger.debug('count {}'.format(srch.count()))
         output['success'] = True
     except TransportError as e:
         if e.error == 'search_phase_execution_exception':
@@ -193,11 +195,10 @@ class MetadataSearch(FacetedSearch):
     facets = {
         'subjects': TermsFacet(field='record.subjects.subject.raw'),
         'creators': TermsFacet(field='record.creators.creatorName.raw'),
-        # 'dates': DateHistogramFacet(field='record.dates.date.gte', interval="month"),
-        # 'dates': RangeFacet(field='record.dates.date.gte', format="MM-yy", ranges=[
-        #     ("to", "now-10M/M"), ("from", "now-10M/M")]),
         'publicationYear': TermsFacet(field='record.publicationYear'),
         'publisher': TermsFacet(field='record.publisher.raw'),
+        'start_date': DateHistogramFacet(field='record.dates.date.gte', interval="month"),
+        'end_date': DateHistogramFacet(field='record.dates.date.lte', interval="month"),
     }
 
     # def search(self):

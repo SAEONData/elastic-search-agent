@@ -2,6 +2,7 @@
 
 import cherrypy
 import json
+import logging
 from agent.config import metadata_index_name
 from agent.config import server_port
 from agent.config import token_index_name
@@ -16,6 +17,8 @@ from agent.utils import format_json_dates
 from elasticsearch_dsl import Search
 import xml.etree.ElementTree as ET
 
+
+logger = logging.getLogger(__name__)
 
 class AgentAPI(object):
 
@@ -69,7 +72,7 @@ class AgentAPI(object):
                 else:
                     new['date'] = {'gte': the_date, 'lte': the_date}
                 lst.append(new)
-        # print(lst)
+        logger.debug(lst)
         record['dates'] = lst
 
         # Replace record if it already exists ie. delete first
@@ -173,27 +176,29 @@ class AgentAPI(object):
         output = {'success': False}
         subjects = kwargs.get('subjects', '')
         try:
-            # fs = MetadataSearch(subjects, filters={'record.publicationYear': '2014'})
             fs = MetadataSearch(subjects)
             aa = fs.build_search()
-            print(aa.to_dict())
+            logger.debug(aa.to_dict())
             response = fs.execute()
         except Exception as e:
             msg = 'Error: faceted_search failed with {}'.format(e)
             output['msg'] = msg
             return output
-        print(response.hits.total, 'hits total')
-
-        facet_response = response.facets.to_dict()
+        logger.debug(response.hits.total, 'hits total')
 
         aggs = response.aggregations.to_dict()
-        print(aggs)
+        logger.debug(aggs)
 
         lines = []
-        for facet_name in facet_response:
+        for facet_key in aggs:
+            facet = aggs[facet_key]
+            facet_name = [k for k in facet.keys() if k != 'doc_count'][0]
             facet_result = dict()
-            for (value, count, selected) in facet_response[facet_name]:
-                facet_result[value] = count
+            for facet_dict in facet[facet_name]['buckets']:
+                key = facet_dict['key']
+                if facet_dict.get('key_as_string', False):
+                    key = facet_dict['key_as_string']
+                facet_result[key] = facet_dict['doc_count']
             lines.append({facet_name: facet_result})
 
         output['success'] = True

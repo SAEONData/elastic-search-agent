@@ -74,8 +74,16 @@ class Metadata(DocType):
             {
                 "record":
                     {
+                        "path_match": "record.start_date",
+                        "match_mapping_type": "string",
+                        "mapping": Date()
+                    }
+            },
+            {
+                "record":
+                    {
                         "path_match": "record.dates.date",
-                        "match_mapping_type": "object",
+                        "match_mapping_type": "string",
                         "mapping": DateRange()
                     }
             }
