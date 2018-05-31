@@ -226,11 +226,14 @@ class AgentAPI(object):
     def faceted_search(self, **kwargs):
         output = {'success': False}
         facets = kwargs.get('facets', 'ALL')
-        facets = get_valid_facets(facets)
-        if facets is None:
-            output['error'] = \
-                'Allowed facets: {}'.format(', '.join(ALLOWED_FACETS))
-            return output
+        if facets == 'ALL':
+            facets = ALLOWED_FACETS
+        else:
+            facets = get_valid_facets(facets)
+            if facets is None:
+                output['error'] = \
+                    'Allowed facets: {}'.format(', '.join(ALLOWED_FACETS))
+                return output
 
         lines = []
         for facet in facets:
@@ -374,7 +377,12 @@ class AgentAPI(object):
         child = ET.SubElement(api, "br")
         child = ET.SubElement(api, "span", {
             'style': 'font-size: 12'})
-        child.text = "Return all known facets"
+        child.text = "Return the facet values for the given facets. Or all known facets if no argument provided"
+        child.text = 'Arguments:'
+        child = ET.SubElement(api, "br")
+        child = ET.SubElement(api, "span", {
+            'style': 'font-size: 12'})
+        child.text = '* facets (optional): comma separated list of facets'
 
         # OAI-PMH
         child = ET.SubElement(api, "br")
