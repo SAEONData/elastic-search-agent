@@ -180,28 +180,54 @@ def search(**kwargs):
     return output
 
 
+all_facets = {
+    'subjects': TermsFacet(field='record.subjects.subject.raw'),
+    'creators': TermsFacet(field='record.creators.creatorName.raw'),
+    'publicationYear': TermsFacet(field='record.publicationYear'),
+    'publisher': TermsFacet(field='record.publisher.raw'),
+    'collectedStartDate': DateHistogramFacet(
+        field='record.dates.date.gte',
+        interval="month"),
+    'collectedEndDate': DateHistogramFacet(
+        field='record.dates.date.lte',
+        interval="month"),
+}
+
+
 class MetadataSearch(FacetedSearch):
+
     doc_types = [Metadata, ]
     index = metadata_index_name
-
-    fields = [
-        # 'record.publicationYear',
-        # 'record.subjects.subject.raw',
-        # 'record.creators.creatorName.raw',
-        # 'record.publisher.raw',
-        # 'record.dates.date',
+    date_query = {
+        'simple_query_string':
+            {'fields': ['record.dates.dateType'], 'query': 'Collected'}
+    }
+    date_filter = [
+        {'term': {'record.dates.dateType': 'Collected'}}
     ]
 
-    facets = {
-        'subjects': TermsFacet(field='record.subjects.subject.raw'),
-        'creators': TermsFacet(field='record.creators.creatorName.raw'),
-        'publicationYear': TermsFacet(field='record.publicationYear'),
-        'publisher': TermsFacet(field='record.publisher.raw'),
-        'start_date': DateHistogramFacet(field='record.dates.date.gte', interval="month"),
-        'end_date': DateHistogramFacet(field='record.dates.date.lte', interval="month"),
-    }
+    fields = [
+    ]
 
-    # def search(self):
-    #     # override methods to add custom pieces
-    #     s = super(MetadataSearch, self).search()
-    #     return s.filter()
+    def __init__(self, **kwargs):
+        facet = None
+        self.facets = {}
+        if kwargs.get('facet'):
+            facet = kwargs.pop('facet')
+        if facet is None:
+            self.facets = all_facets
+        else:
+            self.facets[facet] = all_facets[facet]
+
+        super(MetadataSearch, self).__init__(**kwargs)
+
+    def search(self):
+        # override methods to add custom pieces
+        s = super(MetadataSearch, self).search()
+        print(str(self.facets))
+        if 'collectedStartDate' in self.facets or \
+           'collectedEndDate' in self.facets:
+            date_type = {'fields': ['record.dates.dateType'],
+                         'query': 'Collected'}
+            s.query = {'simple_query_string': date_type}
+        return s.filter()

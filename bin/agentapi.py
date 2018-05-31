@@ -19,6 +19,25 @@ import xml.etree.ElementTree as ET
 
 
 logger = logging.getLogger(__name__)
+ALLOWED_FACETS = [
+    'subjects',
+    'creators',
+    'publicationYear',
+    'publisher',
+    'collectedStartDate',
+    'collectedEndDate'
+]
+
+
+def get_valid_facets(facets):
+    if not facets:
+        return None
+    facets = facets.split(',')
+    for facet in facets:
+        if facet not in ALLOWED_FACETS:
+            return None
+    return facets
+
 
 class AgentAPI(object):
 
@@ -170,19 +189,14 @@ class AgentAPI(object):
 
         return output
 
-    @cherrypy.expose
-    @cherrypy.tools.json_out()
-    def faceted_search(self, **kwargs):
-        output = {'success': False}
-        subjects = kwargs.get('subjects', '')
+    def get_one_facet(self, facet):
+        output = {'success': False, 'lines': []}
         try:
-            fs = MetadataSearch(subjects)
-            aa = fs.build_search()
-            logger.debug(aa.to_dict())
+            fs = MetadataSearch(**{'facet': facet})
             response = fs.execute()
         except Exception as e:
             msg = 'Error: faceted_search failed with {}'.format(e)
-            output['msg'] = msg
+            output['error'] = msg
             return output
         logger.debug(response.hits.total, 'hits total')
 
@@ -200,6 +214,32 @@ class AgentAPI(object):
                     key = facet_dict['key_as_string']
                 facet_result[key] = facet_dict['doc_count']
             lines.append({facet_name: facet_result})
+
+        if lines:
+            output['lines'] = lines
+
+        output['success'] = True
+        return output
+
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def faceted_search(self, **kwargs):
+        output = {'success': False}
+        facets = kwargs.get('facets', 'ALL')
+        facets = get_valid_facets(facets)
+        if facets is None:
+            output['error'] = \
+                'Allowed facets: {}'.format(', '.join(ALLOWED_FACETS))
+            return output
+
+        lines = []
+        for facet in facets:
+            result = self.get_one_facet(facet)
+            if result['success']:
+                lines.extend(result['lines'])
+            else:
+                output['error'] = result['error']
+                return output
 
         output['success'] = True
         output['result_length'] = len(lines)
