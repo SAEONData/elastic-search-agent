@@ -70,10 +70,10 @@ JSON_DICTS = [
         'errors': [],
         'formats': ['application/xml'],
         'geoLocations': [{
-            'geoLocationBox': '41.090 -71.032  42.893 -68.211',
+            "geoLocationBox": "-30.83 18.45 -22.125 32.94",
             'geoLocationPlace': 'Atlantic Ocean',
-            'geoLocationPoint': '31.233 -67.302'},
-        ],
+            'geoLocationPoint': '-30.233 31.302'
+        }],
         'identifier': {
             'identifier': '10.5072/example-full', 'identifierType': 'DOI'},
         'language': 'en-us',
@@ -136,8 +136,7 @@ JSON_DICTS = [
             "coverageEnd": ""
         },
         "geoLocations": [{
-            "geoLocationBox": "-30.83 18.45 -22.125 32.94",
-            'geoLocationPoint': '-25.233 27.302'
+            'geoLocationPoint': '-23.233 18.302'
         }],
         "userVersion": "",
         "description": [

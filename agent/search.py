@@ -165,21 +165,22 @@ def search(**kwargs):
                 }
             }
             filters.append(afilter)
-            afilter = {
-                "geo_bounding_box": {
-                    "record.geoLocations.geoLocationPoint": {
-                        "top_left": {
-                            "lat": coords[0],
-                            "lon": coords[1]
-                        },
-                        "bottom_right": {
-                            "lat": coords[2],
-                            "lon": coords[3]
+            if relation in ['within', 'intersects']:
+                afilter = {
+                    "geo_bounding_box": {
+                        "record.geoLocations.geoLocationPoint": {
+                            "top_left": {
+                                "lat": coords[0],
+                                "lon": coords[1]
+                            },
+                            "bottom_right": {
+                                "lat": coords[2],
+                                "lon": coords[3]
+                            }
                         }
                     }
                 }
-            }
-            # filters.append(afilter)
+                filters.append(afilter)
         except Exception as e:
             msg = 'Coordinate values {} are malformed'.format(coords)
             output['error'] = msg
