@@ -6,6 +6,8 @@ from elasticsearch_dsl import analyzer
 from elasticsearch_dsl import Date
 from elasticsearch_dsl import DateRange
 from elasticsearch_dsl import DocType
+from elasticsearch_dsl import GeoPoint
+from elasticsearch_dsl import GeoShape
 from elasticsearch_dsl import Keyword
 from elasticsearch_dsl import Integer
 from elasticsearch_dsl import MetaField
@@ -74,17 +76,25 @@ class Metadata(DocType):
             {
                 "record":
                     {
-                        "path_match": "record.start_date",
+                        "path_match": "record.dates.date",
                         "match_mapping_type": "string",
-                        "mapping": Date()
+                        "mapping": DateRange()
                     }
             },
             {
                 "record":
                     {
-                        "path_match": "record.dates.date",
+                        "path_match": "record.geoLocations.geoLocationBox",
                         "match_mapping_type": "string",
-                        "mapping": DateRange()
+                        "mapping": GeoShape()
+                    }
+            },
+            {
+                "record":
+                    {
+                        "path_match": "record.geoLocations.geoLocationPoint",
+                        "match_mapping_type": "string",
+                        "mapping": GeoPoint()
                     }
             }
         ])

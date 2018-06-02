@@ -39,6 +39,38 @@ def get_valid_facets(facets):
     return facets
 
 
+def format_geo_point(point):
+    results = point.split(' ')
+    results = [i for i in filter(('').__ne__, results)]
+    results = ','.join(results)
+    return results
+
+
+def format_geo_box(box):
+    results = box.split(' ')
+    results = [float(i) for i in filter(('').__ne__, results)]
+    # results = (results[2], results[1], results[0], results[3])
+    # results = 'BBOX ({})'.format(results)
+    # results = ','.join(results)
+    # coords = [
+    #     [results[2], results[1]],
+    #     [results[0], results[1]],
+    #     [results[0], results[3]],
+    #     [results[2], results[3]],
+    #     [results[2], results[1]],
+    # ]
+    # results = {'type': 'polygon', 'coordinates': coords}
+    coords = "(({} {}, {} {}, {} {}, {} {}, {} {}))".format(
+        results[2], results[1],
+        results[0], results[1],
+        results[0], results[3],
+        results[2], results[3],
+        results[2], results[1])
+    results = 'POLYGON {}'.format(coords)
+    print('format_geo_box: {}'.format(results))
+    return results
+
+
 class AgentAPI(object):
 
     @cherrypy.expose
@@ -94,6 +126,18 @@ class AgentAPI(object):
         logger.debug(lst)
         record['dates'] = lst
 
+        # Hack to fix geoLocations
+        geoLocations = record.get('geoLocations')
+        if geoLocations:
+            for geoLocation in geoLocations:
+                if geoLocation.get('geoLocationPoint'):
+                    geoLocation['geoLocationPoint'] = \
+                        format_geo_point(geoLocation['geoLocationPoint'])
+                if geoLocation.get('geoLocationBox'):
+                    geoLocation['geoLocationBox'] = \
+                        format_geo_box(geoLocation['geoLocationBox'])
+
+        print(geoLocations)
         # Replace record if it already exists ie. delete first
         srch = Metadata.search()
         srch = srch.filter('match', record_id=identifier)
@@ -114,7 +158,7 @@ class AgentAPI(object):
             md.save()
         except Exception as e:
             msg = "Error: {}: {} - {}".format(
-                'Save failed', identifier, e)
+                'Save failed', identifier, e.info)
             output['msg'] = msg
             return output
 
@@ -318,6 +362,11 @@ class AgentAPI(object):
         child = ET.SubElement(api, "span", {
             'style': 'font-size: 12'})
         child.text = '* "size": number of records - default is 100'
+
+        child = ET.SubElement(api, "br")
+        child = ET.SubElement(api, "span", {
+            'style': 'font-size: 12'})
+        child.text = '* "enclosed": '
 
         # Add
         child = ET.SubElement(api, "br")

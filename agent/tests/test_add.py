@@ -72,7 +72,8 @@ JSON_DICTS = [
         'geoLocations': [{
             'geoLocationBox': '41.090 -71.032  42.893 -68.211',
             'geoLocationPlace': 'Atlantic Ocean',
-            'geoLocationPoint': '31.233 -67.302'}],
+            'geoLocationPoint': '31.233 -67.302'},
+        ],
         'identifier': {
             'identifier': '10.5072/example-full', 'identifierType': 'DOI'},
         'language': 'en-us',
@@ -134,11 +135,10 @@ JSON_DICTS = [
             "coverageBegin": "",
             "coverageEnd": ""
         },
-        "geoLocations": [
-            {
-                "geoLocationBox": "-34.83416999999997 16.451910000000055 -22.12502999999998 32.944980000000044"
-            }
-        ],
+        "geoLocations": [{
+            "geoLocationBox": "-30.83 18.45 -22.125 32.94",
+            'geoLocationPoint': '-25.233 27.302'
+        }],
         "userVersion": "",
         "description": [
             {
@@ -226,7 +226,7 @@ JSON_DICTS = [
         },
         "geoLocations": [
             {
-                "geoLocationBox": "-34.83416999999997 16.451910000000055 -22.12502999999998 32.944980000000044"
+                "geoLocationBox": "-34.83 16.45 -22.12 32.94"
             }
         ],
         "userVersion": "",

@@ -25,6 +25,11 @@ def search(**kwargs):
     sort_field = None
     from_date = None
     to_date = None
+    filters = []
+    afilter = None
+    relation = None
+    coords = None
+
     start = 1
     size = 100
     q_list = []
@@ -47,6 +52,18 @@ def search(**kwargs):
             continue
         elif key == 'record.to':
             to_date = kwargs[key]
+            continue
+        elif key in 'record.encloses':
+            relation = 'within'
+            coords = kwargs[key]
+            continue
+        elif key in 'record.includes':
+            relation = 'contains'
+            coords = kwargs[key]
+            continue
+        elif key in 'record.overlaps':
+            relation = 'intersects'
+            coords = kwargs[key]
             continue
         # Otherwise add to query
         field_type = mapping.resolve_field(key)
@@ -132,7 +149,57 @@ def search(**kwargs):
         q_list.append(Q({"range": dates}))
         logger.debug('dates: {}'.format(dates))
 
-    srch.query = {'bool': {'must': q_list}}
+    if relation:
+        try:
+            coords = coords.split(',')
+            coords = [float(i) for i in coords]
+            afilter = {
+                "geo_shape": {
+                    "record.geoLocations.geoLocationBox": {
+                        "shape": {
+                            "type": "envelope",
+                            "coordinates": [[coords[0], coords[1]], [coords[2], coords[3]]]
+                        },
+                        "relation": relation
+                    }
+                }
+            }
+            filters.append(afilter)
+            afilter = {
+                "geo_bounding_box": {
+                    "record.geoLocations.geoLocationPoint": {
+                        "top_left": {
+                            "lat": coords[0],
+                            "lon": coords[1]
+                        },
+                        "bottom_right": {
+                            "lat": coords[2],
+                            "lon": coords[3]
+                        }
+                    }
+                }
+            }
+            # filters.append(afilter)
+        except Exception as e:
+            msg = 'Coordinate values {} are malformed'.format(coords)
+            output['error'] = msg
+            return output
+
+    # Add Query
+    if len(q_list) == 0:
+        q_list = {'match_all': {}}
+
+    qry = {'must': q_list}
+
+    # Add Filter
+    if filters:
+        if len(filters) == 1:
+            qry['filter'] = filters[0]
+        else:
+            qry['filter'] = {'bool': {'should': filters}}
+
+    print(qry)
+    srch.query = {'bool': qry}
 
     try:
         start = int(start)
