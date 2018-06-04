@@ -62,7 +62,7 @@ JSON_DICTS = [
             'nameIdentifierScheme': 'ORCID',
             'schemeURI': 'http://orcid.org/'}],
         'dates': [{'date': '2018-01-01/2018-12-31',
-                   'dateType': 'Submitted'}],
+                   'dateType': 'Collected'}],
         'description': [{
             'description': 'XML example of all DataCite '
                            'Metadata Schema v3.1 properties.',

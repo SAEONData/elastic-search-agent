@@ -25,6 +25,7 @@ def search(**kwargs):
     sort_field = None
     from_date = None
     to_date = None
+    date_type = None
     filters = []
     afilter = None
     relation = None
@@ -52,6 +53,9 @@ def search(**kwargs):
             continue
         elif key == 'record.to':
             to_date = kwargs[key]
+            continue
+        elif key == 'record.dates.dateType':
+            date_type = kwargs[key].lower()
             continue
         elif key in 'record.encloses':
             relation = 'within'
@@ -115,7 +119,7 @@ def search(**kwargs):
 
     if from_date:
         try:
-            from_date = datetime.strptime(from_date, '%Y-%m-%d')
+            from_date = datetime.strptime(from_date, '%Y-%m-%d').date()
         except Exception as e:
             msg = 'from date {} format should be YYYY-MM-DD'.format(
                 from_date)
@@ -124,30 +128,27 @@ def search(**kwargs):
 
     if to_date:
         try:
-            to_date = datetime.strptime(to_date, '%Y-%m-%d')
+            to_date = datetime.strptime(to_date, '%Y-%m-%d').date()
         except Exception as e:
             msg = 'to date {} format should be YYYY-MM-DD'.format(
                 to_date)
             output['error'] = msg
             return output
 
-    if from_date and to_date:
-        dates = {'record.dates.date': {
-            'gte': from_date,
-            'lte': to_date,
-            'relation': 'intersects'}}
-        logger.debug('dates: {}'.format(dates))
-        q_list.append(Q({"range": dates}))
-    elif from_date:
-        dates = {'record.dates.date': {
-            'gte': from_date}}
-        q_list.append(Q({"range": dates}))
-        logger.debug('dates: {}'.format(dates))
-    elif to_date:
-        dates = {'record.dates.date': {
-            'lte': to_date}}
-        q_list.append(Q({"range": dates}))
-        logger.debug('dates: {}'.format(dates))
+    if from_date or to_date:
+        dates = []
+        if from_date:
+            dates.append(
+                {'range': {'record.dates.date.lte': {'gte': from_date}}})
+        if to_date:
+            dates.append(
+                {'range': {'record.dates.date.gte': {'lte': to_date}}})
+        if date_type:
+            dates.append(
+                {'term': {'record.dates.dateType': date_type}})
+        filters.append({'bool': {'must': dates}})
+    elif date_type:
+        q_list.append(Q({"match": {'record.dates.dateType': date_type}}))
 
     if relation:
         try:
@@ -199,8 +200,9 @@ def search(**kwargs):
         else:
             qry['filter'] = {'bool': {'should': filters}}
 
-    print(qry)
-    srch.query = {'bool': qry}
+    qry = {'bool': qry}
+    print('Search Query {}'.format(qry))
+    srch.query = qry
 
     try:
         start = int(start)
