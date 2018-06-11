@@ -24,7 +24,8 @@ Run the following commands to create an elasticsearch instance for the Agent:
     sudo apt-get install elasticsearch
     sudo service elasticsearch start
 
-Note: you might need to set `START_DAEMON=true` in /etc/default/elasticsearch
+Go to [http://localhost:9200]() to check that elasticsearch is running. Depending
+on your system, you might need to set `START_DAEMON=true` in /etc/default/elasticsearch
 (and restart the service after changing the config).
 
 ## Usage
