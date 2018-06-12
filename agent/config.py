@@ -5,8 +5,8 @@ server_url = 'http://localhost:{}'.format(server_port)
 
 # ES details
 es_port = 9200
-metadata_index_name = 'md_index_999'
-token_index_name = 'rt_index_999'
+metadata_index_name = 'md_index_1'
+token_index_name = 'rt_index_1'
 
 # Importer details
 import_url = 'http://oa.dirisa.org'
