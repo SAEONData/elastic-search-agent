@@ -1,8 +1,9 @@
-from agent.config import es_connection
+from agent.config import es_port
 from agent.config import metadata_index_name
 from agent.config import token_index_name
 from datetime import datetime
 from elasticsearch_dsl import analyzer
+from elasticsearch_dsl import connections
 from elasticsearch_dsl import Date
 from elasticsearch_dsl import DateRange
 from elasticsearch_dsl import DocType
@@ -14,6 +15,9 @@ from elasticsearch_dsl import MetaField
 from elasticsearch_dsl import Object
 from elasticsearch_dsl import Text
 
+es_connection = connections.create_connection(
+    hosts=['localhost:{}'.format(es_port)],
+    timeout=20)
 
 html_strip = analyzer(
     'html_strip',
