@@ -1,5 +1,6 @@
 import json
 import requests
+from agent.config import metadata_index_name
 from agent.config import server_url
 
 
@@ -7,6 +8,7 @@ def add_a_metadata_record(data, set_spec=''):
 
     data = {
         'record': json.dumps(data),
+        'index': metadata_index_name,
         'set_spec': set_spec
     }
     response = requests.post(

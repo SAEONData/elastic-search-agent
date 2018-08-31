@@ -3,7 +3,8 @@
 import cherrypy
 import json
 import logging
-from agent.config import metadata_index_name
+import time
+import xml.etree.ElementTree as ET
 from agent.config import server_port
 from agent.config import token_index_name
 from agent.oaipmh import process_request
@@ -11,11 +12,12 @@ from agent.persist import Metadata
 from agent.search import MetadataSearch
 from agent.search import search_all
 from agent.search import search
+from agent.utils import index_exists
 from agent.utils import get_request_host
 from agent.utils import json_handler
 from agent.utils import format_json_dates
+from agent.utils import validate_metadata_record
 from elasticsearch_dsl import Search
-import xml.etree.ElementTree as ET
 
 
 logger = logging.getLogger(__name__)
@@ -39,28 +41,81 @@ def get_valid_facets(facets):
     return facets
 
 
-def format_geo_point(point):
-    results = point.split(' ')
-    results = [i for i in filter(('').__ne__, results)]
-    results = ','.join(results)
-    return results
-
-
-def format_geo_box(box):
-    results = box.split(' ')
-    results = [float(i) for i in filter(('').__ne__, results)]
-    coords = "(({} {}, {} {}, {} {}, {} {}, {} {}))".format(
-        results[2], results[1],
-        results[0], results[1],
-        results[0], results[3],
-        results[2], results[3],
-        results[2], results[1])
-    results = 'POLYGON {}'.format(coords)
-    # print('format_geo_box: {}'.format(results))
-    return results
-
-
 class AgentAPI(object):
+
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def create_index(self, **kwargs):
+        cherrypy.log(str(kwargs))
+        output = {'success': False}
+        record = kwargs.get('record')
+        if record is None:
+            msg = "Error: 'record' argument is required"
+            output['msg'] = msg
+            return output
+        index = kwargs.get('index')
+        if index is None:
+            msg = "Error: 'index' argument is required"
+            output['msg'] = msg
+            return output
+        if index_exists(index):
+            msg = "Error: index {} already exists".format(index)
+            output['msg'] = msg
+            return output
+
+        try:
+            record = json.loads(record)
+        except Exception as e:
+            msg = "Error: json format {}".format(e)
+            output['msg'] = msg
+            return output
+
+        validation = validate_metadata_record(record)
+        if not validation['success']:
+            output['msg'] = validation['msg']
+            return output
+
+        identifier = record['identifier']['identifier']
+
+        Metadata.init(index=index)
+        try:
+            md = Metadata(
+                record=record, record_id=identifier, set_spec='dummy')
+            md.meta.index = index
+        except Exception as e:
+            msg = "Error: {}: {}".format('Creation failed', e)
+            output['msg'] = msg
+            return output
+
+        try:
+            md.save()
+        except Exception as e:
+            msg = "Error: {}: {} - {}".format(
+                'Save failed', identifier, e.info)
+            output['msg'] = msg
+            return output
+
+        # Wait until record has been created - Do No Remove!
+        time.sleep(3)
+
+        # Delete example record
+        srch = Metadata.search(index=index)
+        srch = srch.filter('match', record_id=identifier)
+        srch.execute()
+        if srch.count() == 0:
+            msg = "Error: record {} not found".format(identifier)
+            output['msg'] = msg
+            return output
+        if srch.count() > 1 and not force:
+            msg = "Error: duplicate records found with id {}. ".format(
+                identifier)
+            msg.append('Use force=true argument to delete all duplicates')
+            output['msg'] = msg
+            return output
+        srch.delete()
+
+        output['success'] = True
+        return output
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
@@ -72,6 +127,16 @@ class AgentAPI(object):
             msg = "Error: 'record' argument is required"
             output['msg'] = msg
             return output
+        index = kwargs.get('index')
+        if index is None:
+            msg = "Error: 'index' argument is required"
+            output['msg'] = msg
+            return output
+        if not index_exists(index):
+            msg = "Error: index {} does not exist".format(index)
+            output['msg'] = msg
+            return output
+
         try:
             record = json.loads(record)
         except Exception as e:
@@ -79,65 +144,28 @@ class AgentAPI(object):
             output['msg'] = msg
             return output
 
+        validation = validate_metadata_record(record)
+        if not validation['success']:
+            output['msg'] = validation['msg']
+            return output
+
+        identifier = record['identifier']['identifier']
+
         set_spec = kwargs.get('set_spec', '')
-
-        try:
-            identifier = record['identifier']['identifier']
-        except:
-            msg = "identifier is required"
-            output['msg'] = msg
-            return output
-        if identifier == '':
-            msg = "identifier is required"
-            output['msg'] = msg
-            return output
-
-        # Hack to fix rights
-        rights = record.get('rights')
-        if rights == '':
-            record['rights'] = []
-
-        # Hack to fix dates
-        dates = record.get('dates')
-        lst = []
-        for date_dict in dates:
-            if date_dict.get('date', '') != '':
-                new = dict()
-                if date_dict.get('dateType'):
-                    new['dateType'] = date_dict.get('dateType')
-                the_date = date_dict['date']
-                if '/' in the_date:
-                    the_dates = the_date.split('/')
-                    new['date'] = {'gte': the_dates[0], 'lte': the_dates[1]}
-                else:
-                    new['date'] = {'gte': the_date, 'lte': the_date}
-                lst.append(new)
-        logger.debug(lst)
-        record['dates'] = lst
-
-        # Hack to fix geoLocations
-        geoLocations = record.get('geoLocations')
-        if geoLocations:
-            for geoLocation in geoLocations:
-                if geoLocation.get('geoLocationPoint'):
-                    geoLocation['geoLocationPoint'] = \
-                        format_geo_point(geoLocation['geoLocationPoint'])
-                if geoLocation.get('geoLocationBox'):
-                    geoLocation['geoLocationBox'] = \
-                        format_geo_box(geoLocation['geoLocationBox'])
 
         # print(geoLocations)
         # Replace record if it already exists ie. delete first
-        srch = Metadata.search()
+        srch = Metadata.search(index=index)
         srch = srch.filter('match', record_id=identifier)
         srch.execute()
         if srch.count() == 1:
             srch.delete()
 
-        # Metadata.init()
+        Metadata.init(index=index)
         try:
             md = Metadata(
                 record=record, record_id=identifier, set_spec=set_spec)
+            md.meta.index = index
         except Exception as e:
             msg = "Error: {}: {}".format('Creation failed', e)
             output['msg'] = msg
@@ -156,10 +184,20 @@ class AgentAPI(object):
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def delete_all(self):
+    def delete_all(self, **kwargs):
         output = {'success': False}
-        cherrypy.log('delete_all')
-        s = Search(index=metadata_index_name)
+        index = kwargs.get('index')
+        if index is None:
+            msg = "Error: 'index' argument is required"
+            output['msg'] = msg
+            return output
+        if not index_exists(index):
+            msg = "Error: index {} does not exist".format(index)
+            output['msg'] = msg
+            return output
+
+        cherrypy.log('delete_all in index {}'.format(index))
+        s = Search(index=index)
         s.delete()
         s = Search(index=token_index_name)
         s.delete()
@@ -176,10 +214,19 @@ class AgentAPI(object):
             msg = "Error: 'record_id' argument is required"
             output['msg'] = msg
             return output
+        index = kwargs.get('index')
+        if index is None:
+            msg = "Error: 'index' argument is required"
+            output['msg'] = msg
+            return output
+        if not index_exists(index):
+            msg = "Error: index {} does not exist".format(index)
+            output['msg'] = msg
+            return output
 
         force = kwargs.get('force', 'false').lower() == 'true'
 
-        srch = Metadata.search()
+        srch = Metadata.search(index=index)
         srch = srch.filter('match', record_id=record_id)
         srch.execute()
         if srch.count() == 0:
@@ -201,14 +248,27 @@ class AgentAPI(object):
     @cherrypy.tools.json_out(handler=json_handler)
     def search(self, **kwargs):
         output = {'success': False}
-        if kwargs:
-            new_kwargs = {}
-            for k in kwargs:
-                new_k = 'record.{}'.format(k)
-                new_kwargs[new_k] = kwargs[k]
-            response = search(**new_kwargs)
+        index = None
+        new_kwargs = {}
+        for k in kwargs:
+            if k == 'index':
+                index = kwargs[k]
+                continue
+            new_k = 'record.{}'.format(k)
+            new_kwargs[new_k] = kwargs[k]
+        if index is None:
+            msg = "Error: 'index' argument is required"
+            output['msg'] = msg
+            return output
+        if not index_exists(index):
+            msg = "Error: index {} does not exist".format(index)
+            output['msg'] = msg
+            return output
+
+        if new_kwargs:
+            response = search(index=index, **new_kwargs)
         else:
-            response = search_all()
+            response = search_all(index=index)
 
         if not response['success']:
             output['error'] = response['error']
@@ -222,10 +282,10 @@ class AgentAPI(object):
 
         return output
 
-    def get_one_facet(self, facet):
+    def get_one_facet(self, index, facet):
         output = {'success': False, 'lines': []}
         try:
-            fs = MetadataSearch(**{'facet': facet})
+            fs = MetadataSearch(**{'index': index, 'facet': facet})
             response = fs.execute()
         except Exception as e:
             msg = 'Error: faceted_search failed with {}'.format(e)
@@ -258,6 +318,15 @@ class AgentAPI(object):
     @cherrypy.tools.json_out()
     def faceted_search(self, **kwargs):
         output = {'success': False}
+        index = kwargs.get('index')
+        if index is None:
+            msg = "Error: 'index' argument is required"
+            output['msg'] = msg
+            return output
+        if not index_exists(index):
+            msg = "Error: index {} does not exist".format(index)
+            output['msg'] = msg
+            return output
         facets = kwargs.get('facets', 'ALL')
         if facets == 'ALL':
             facets = ALLOWED_FACETS
@@ -270,7 +339,7 @@ class AgentAPI(object):
 
         lines = []
         for facet in facets:
-            result = self.get_one_facet(facet)
+            result = self.get_one_facet(index, facet)
             if result['success']:
                 lines.extend(result['lines'])
             else:

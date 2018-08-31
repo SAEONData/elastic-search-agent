@@ -1,6 +1,5 @@
 import logging
 from datetime import datetime
-from agent.config import metadata_index_name
 from agent.persist import Metadata
 from elasticsearch.exceptions import TransportError
 from elasticsearch_dsl import DateHistogramFacet
@@ -12,15 +11,17 @@ from elasticsearch_dsl import TermsFacet
 logger = logging.getLogger(__name__)
 
 
-def search_all():
-    srch = Metadata.search()
+def search_all(index):
+    srch = Metadata.search(index=index)
+    logger.info('search_all in index {}'.format(index))
     return {'success': True, 'result': srch.scan()}
 
 
-def search(**kwargs):
-    mapping = Mapping.from_es(metadata_index_name, 'doc')
+def search(index, **kwargs):
     output = {'success': False}
-    srch = Metadata.search()
+    mapping = Mapping.from_es(index, 'doc')
+    srch = Metadata.search(index=index)
+    logger.info('search in index {}'.format(index))
     source_fields = ''
     sort_field = None
     from_date = None
@@ -267,7 +268,6 @@ all_facets = {
 class MetadataSearch(FacetedSearch):
 
     doc_types = [Metadata, ]
-    index = metadata_index_name
     date_query = {
         'simple_query_string':
             {'fields': ['record.dates.dateType'], 'query': 'Collected'}
@@ -282,6 +282,8 @@ class MetadataSearch(FacetedSearch):
     def __init__(self, **kwargs):
         facet = None
         self.facets = {}
+        if kwargs.get('index'):
+            self.index = kwargs.pop('index')
         if kwargs.get('facet'):
             facet = kwargs.pop('facet')
         if facet is None:

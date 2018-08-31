@@ -1,5 +1,4 @@
 from agent.config import es_port
-from agent.config import metadata_index_name
 from agent.config import token_index_name
 from datetime import datetime
 from elasticsearch_dsl import analyzer
@@ -34,7 +33,6 @@ class Metadata(DocType):
     record = Object()
 
     class Meta:
-        index = metadata_index_name
         using = es_connection
         dynamic_templates = MetaField([
             {
