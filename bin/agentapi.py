@@ -401,7 +401,7 @@ class AgentAPI(object):
         child = ET.SubElement(api, "br")
         child = ET.SubElement(api, "span", {
             'style': 'font-size: 12'})
-        child.text = '* record: the model example of the record structure'
+        child.text = '* record: a template records used to define the metadata structure'
 
         # Search
         ET.SubElement(api, "br")
