@@ -378,6 +378,33 @@ class AgentAPI(object):
         child.text = 'Welcome to the SAEON Metadata Search Agent'
         api = ET.SubElement(body, "h3")
         api.text = 'JSON API'
+
+        # Create
+        child = ET.SubElement(api, "br")
+        child = ET.SubElement(api, "br")
+        add = ET.SubElement(api, "a", {
+            'href': '{}/create_index'.format(url)
+        })
+        add.text = 'Create Index'
+        child = ET.SubElement(api, "br")
+        child = ET.SubElement(api, "span", {
+            'style': 'font-size: 12'})
+        child.text = "Create an index"
+        child = ET.SubElement(api, "br")
+        child = ET.SubElement(api, "span", {
+            'style': 'font-size: 12'})
+        child.text = 'Arguments:'
+        child = ET.SubElement(api, "br")
+        child = ET.SubElement(api, "span", {
+            'style': 'font-size: 12'})
+        child.text = '* index: where the new records will be stored'
+        child = ET.SubElement(api, "br")
+        child = ET.SubElement(api, "span", {
+            'style': 'font-size: 12'})
+        child.text = '* record: the model example of the record structure'
+
+        # Search
+        ET.SubElement(api, "br")
         ET.SubElement(api, "br")
         search = ET.SubElement(api, "a", {
             'href': '{}/search'.format(url)
@@ -391,6 +418,10 @@ class AgentAPI(object):
         child = ET.SubElement(api, "span", {
             'style': 'font-size: 12'})
         child.text = 'Arguments:'
+        child = ET.SubElement(api, "br")
+        child = ET.SubElement(api, "span", {
+            'style': 'font-size: 12'})
+        child.text = '* index: the name of the index to be searched'
         child = ET.SubElement(api, "br")
         child = ET.SubElement(api, "span", {
             'style': 'font-size: 12'})
@@ -453,6 +484,10 @@ class AgentAPI(object):
         child = ET.SubElement(api, "br")
         child = ET.SubElement(api, "span", {
             'style': 'font-size: 12'})
+        child.text = '* index: where the new records will be added'
+        child = ET.SubElement(api, "br")
+        child = ET.SubElement(api, "span", {
+            'style': 'font-size: 12'})
         child.text = "* record: json dict in 'SAEON JSON DataCite' format"
         child = ET.SubElement(api, "br")
         child = ET.SubElement(api, "span", {
@@ -477,6 +512,10 @@ class AgentAPI(object):
         child = ET.SubElement(api, "br")
         child = ET.SubElement(api, "span", {
             'style': 'font-size: 12'})
+        child.text = '* index: the index from which records will be deleted'
+        child = ET.SubElement(api, "br")
+        child = ET.SubElement(api, "span", {
+            'style': 'font-size: 12'})
         child.text = "* record_id: record identifier to be deleted"
         child = ET.SubElement(api, "br")
         child = ET.SubElement(api, "span", {
@@ -495,6 +534,10 @@ class AgentAPI(object):
             'style': 'font-size: 12'})
         child.text = "Return the facet values for the given facets. Or all known facets if no argument provided"
         child.text = 'Arguments:'
+        child = ET.SubElement(api, "br")
+        child = ET.SubElement(api, "span", {
+            'style': 'font-size: 12'})
+        child.text = '* index: the name of the index to be searched'
         child = ET.SubElement(api, "br")
         child = ET.SubElement(api, "span", {
             'style': 'font-size: 12'})
