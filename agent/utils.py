@@ -31,8 +31,12 @@ def format_geo_box(box):
 
 def validate_metadata_record(record):
     output = {'success': False}
+    if not record.get('metadata_json'):
+        msg = "metadata_json is required"
+        output['msg'] = msg
+        return output
     try:
-        identifier = record['identifier']['identifier']
+        identifier = record['metadata_json']['identifier']['identifier']
     except Exception as e:
         msg = "identifier is required"
         logger.debug('Exception: {}: {}'.format(msg, e))
@@ -44,12 +48,12 @@ def validate_metadata_record(record):
         return output
 
     # Hack to fix rights
-    rights = record.get('rights')
+    rights = record['metadata_json'].get('rights')
     if rights == '':
         record['rights'] = []
 
     # Hack to fix dates
-    dates = record.get('dates')
+    dates = record['metadata_json'].get('dates')
     lst = []
     for date_dict in dates:
         if date_dict.get('date', '') != '':
@@ -64,10 +68,10 @@ def validate_metadata_record(record):
                 new['date'] = {'gte': the_date, 'lte': the_date}
             lst.append(new)
     logger.debug(lst)
-    record['dates'] = lst
+    record['metadata_json']['dates'] = lst
 
     # Hack to fix geoLocations
-    geoLocations = record.get('geoLocations')
+    geoLocations = record['metadata_json'].get('geoLocations')
     if geoLocations:
         for geoLocation in geoLocations:
             if geoLocation.get('geoLocationPoint'):
@@ -144,9 +148,9 @@ def format_json_dates(hits):
     for result in hits:
         result = result.to_dict()
         new_dates = []
-        for dates in result['record'].get('dates', []):
+        for dates in result['record']['metadata_json'].get('dates', []):
             new_dates.append(format_json_date(dates))
-        result['record']['dates'] = new_dates
+        result['record']['metadata_json']['dates'] = new_dates
         results.append(result)
 
     return results

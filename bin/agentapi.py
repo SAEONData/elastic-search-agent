@@ -75,7 +75,7 @@ class AgentAPI(object):
             output['msg'] = validation['msg']
             return output
 
-        identifier = record['identifier']['identifier']
+        identifier = record['metadata_json']['identifier']['identifier']
 
         Metadata.init(index=index)
         try:
@@ -149,7 +149,7 @@ class AgentAPI(object):
             output['msg'] = validation['msg']
             return output
 
-        identifier = record['identifier']['identifier']
+        identifier = record['metadata_json']['identifier']['identifier']
 
         set_spec = kwargs.get('set_spec', '')
 
@@ -254,8 +254,7 @@ class AgentAPI(object):
             if k == 'index':
                 index = kwargs[k]
                 continue
-            new_k = 'record.{}'.format(k)
-            new_kwargs[new_k] = kwargs[k]
+            new_kwargs[k] = kwargs[k]
         if index is None:
             msg = "Error: 'index' argument is required"
             output['msg'] = msg

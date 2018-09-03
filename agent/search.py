@@ -37,36 +37,36 @@ def search(index, **kwargs):
     q_list = []
     for key in kwargs:
         logger.debug('------------------------' + key)
-        if key == 'record.fields':
+        if key == 'fields':
             source_fields = kwargs[key]
             continue
-        elif key == 'record.start':
+        elif key == 'start':
             start = kwargs[key]
             continue
-        elif key == 'record.size':
+        elif key == 'size':
             size = kwargs[key]
             continue
-        elif key == 'record.sort':
+        elif key == 'sort':
             sort_field = kwargs[key]
             continue
-        elif key == 'record.from':
+        elif key == 'from':
             from_date = kwargs[key]
             continue
-        elif key == 'record.to':
+        elif key == 'to':
             to_date = kwargs[key]
             continue
-        elif key == 'record.dates.dateType':
+        elif key == 'dates.dateType':
             date_type = kwargs[key].lower()
             continue
-        elif key in 'record.encloses':
+        elif key in 'encloses':
             relation = 'within'
             coords = kwargs[key]
             continue
-        elif key in 'record.includes':
+        elif key in 'includes':
             relation = 'contains'
             coords = kwargs[key]
             continue
-        elif key in 'record.overlaps':
+        elif key in 'overlaps':
             relation = 'intersects'
             coords = kwargs[key]
             continue
@@ -88,10 +88,10 @@ def search(index, **kwargs):
         logger.debug('Sort on {}'.format(sort_field))
         if sort_field.startswith('-'):
             sort_field = sort_field[1:]
-            sort_field_name = 'record.{}'.format(sort_field)
+            sort_field_name = sort_field
             sort_field = {sort_field_name: {'order': 'desc'}}
         else:
-            sort_field_name = 'record.{}'.format(sort_field)
+            sort_field_name = sort_field
             sort_field = {sort_field_name: {'order': 'asc'}}
 
         field_type = mapping.resolve_field(sort_field_name)
@@ -109,8 +109,8 @@ def search(index, **kwargs):
         new_fields = []
         for field in source_fields.split(','):
             field = field.strip()
-            logger.debug('limit output field: record.{}'.format(field))
-            field_name = 'record.{}'.format(field)
+            logger.debug('limit output field: {}'.format(field))
+            field_name = field
             if mapping.resolve_field(field_name) is None:
                 msg = 'Unknown source field: {}'.format(field)
                 output['error'] = msg
@@ -140,16 +140,16 @@ def search(index, **kwargs):
         dates = []
         if from_date:
             dates.append(
-                {'range': {'record.dates.date.lte': {'gte': from_date}}})
+                {'range': {'record.metadata_json.dates.date.lte': {'gte': from_date}}})
         if to_date:
             dates.append(
-                {'range': {'record.dates.date.gte': {'lte': to_date}}})
+                {'range': {'record.metadata_json.dates.date.gte': {'lte': to_date}}})
         if date_type:
             dates.append(
-                {'term': {'record.dates.dateType': date_type}})
+                {'term': {'record.metadata_json.dates.dateType': date_type}})
         filters.append({'bool': {'must': dates}})
     elif date_type:
-        q_list.append(Q({"match": {'record.dates.dateType': date_type}}))
+        q_list.append(Q({"match": {'record.metadata_json.dates.dateType': date_type}}))
 
     if relation:
         try:
@@ -157,7 +157,7 @@ def search(index, **kwargs):
             coords = [float(i) for i in coords]
             afilter = {
                 "geo_shape": {
-                    "record.geoLocations.geoLocationBox": {
+                    "record.metadata_json.geoLocations.geoLocationBox": {
                         "shape": {
                             "type": "envelope",
                             "coordinates": [[coords[0], coords[1]], [coords[2], coords[3]]]
@@ -170,7 +170,7 @@ def search(index, **kwargs):
             if relation in ['within', 'intersects']:
                 afilter = {
                     "geo_bounding_box": {
-                        "record.geoLocations.geoLocationPoint": {
+                        "record.metadata_json.geoLocations.geoLocationPoint": {
                             "top_left": {
                                 "lat": coords[0],
                                 "lon": coords[1]
@@ -252,15 +252,15 @@ def search(index, **kwargs):
 
 
 all_facets = {
-    'subjects': TermsFacet(field='record.subjects.subject.raw'),
-    'creators': TermsFacet(field='record.creators.creatorName.raw'),
-    'publicationYear': TermsFacet(field='record.publicationYear'),
-    'publisher': TermsFacet(field='record.publisher.raw'),
+    'subjects': TermsFacet(field='record.metadata_json.subjects.subject.raw'),
+    'creators': TermsFacet(field='record.metadata_json.creators.creatorName.raw'),
+    'publicationYear': TermsFacet(field='record.metadata_json.publicationYear'),
+    'publisher': TermsFacet(field='record.metadata_json.publisher.raw'),
     'collectedStartDate': DateHistogramFacet(
-        field='record.dates.date.gte',
+        field='record.metadata_json.dates.date.gte',
         interval="month"),
     'collectedEndDate': DateHistogramFacet(
-        field='record.dates.date.lte',
+        field='record.metadata_json.dates.date.lte',
         interval="month"),
 }
 
@@ -270,10 +270,10 @@ class MetadataSearch(FacetedSearch):
     doc_types = [Metadata, ]
     date_query = {
         'simple_query_string':
-            {'fields': ['record.dates.dateType'], 'query': 'Collected'}
+            {'fields': ['record.metadata_json.dates.dateType'], 'query': 'Collected'}
     }
     date_filter = [
-        {'term': {'record.dates.dateType': 'Collected'}}
+        {'term': {'record.metadata_json.dates.dateType': 'Collected'}}
     ]
 
     fields = [
@@ -299,7 +299,7 @@ class MetadataSearch(FacetedSearch):
         print(str(self.facets))
         if 'collectedStartDate' in self.facets or \
            'collectedEndDate' in self.facets:
-            date_type = {'fields': ['record.dates.dateType'],
+            date_type = {'fields': ['record.metadata_json.dates.dateType'],
                          'query': 'Collected'}
             s.query = {'simple_query_string': date_type}
         return s.filter()
