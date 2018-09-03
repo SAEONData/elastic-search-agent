@@ -34,9 +34,8 @@ def add_metadata_records(repeats=1):
 
 
 JSON_DICTS = [{
-    'name': '1000-100-1',
-    'owner_org': 'WebTide',
-    'metadata_collection_id': '1000',
+    'organization': 'WebTide',
+    'collection': '1000',
     'infrustructures': ['SASDI', 'SANSA'],
     'metadata_json':
         {
@@ -124,9 +123,8 @@ JSON_DICTS = [{
                          'http://schema.datacite.org/meta/kernel-3/metadata.xsd'
     },
 }, {
-    'name': '1000-100-2',
-    'owner_org': 'WebTide',
-    'metadata_collection_id': '1000',
+    'organization': 'WebTide',
+    'collection': '1000',
     'infrustructures': ['SASDI', 'SANSA'],
     'metadata_json':
         {
@@ -208,9 +206,8 @@ JSON_DICTS = [{
             }
     },
 }, {
-    'name': '2000-100-1',
-    'owner_org': 'WebTide',
-    'metadata_collection_id': '2000',
+    'organization': 'WebTide',
+    'collection': '2000',
     'infrustructures': ['SASDI'],
     'metadata_json':
         {

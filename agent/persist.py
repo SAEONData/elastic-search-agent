@@ -38,14 +38,6 @@ class Metadata(DocType):
             {
                 "record":
                     {
-                        "path_match": "record.name",
-                        "match_mapping_type": "string",
-                        "mapping": Keyword("not_analyzed")
-                    }
-            },
-            {
-                "record":
-                    {
                         "path_match": "record.metadata_json.identifier.identifier",
                         "match_mapping_type": "string",
                         "mapping": Keyword("not_analyzed")

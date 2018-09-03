@@ -15,7 +15,7 @@
 .idea/*
 .installed.cfg
 .settings
-*ElasticSearch_Agent.egg-info/*
+/ElasticSearch_Agent.egg-info/
 bin
 build
 develop-eggs

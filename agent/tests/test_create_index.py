@@ -23,9 +23,8 @@ def create_new_index():
 
 
 JSON_DICT = {
-    'name': '1000-100-1',
-    'owner_org': 'WebTide',
-    'metadata_collection_id': '1000',
+    'organization': 'WebTide',
+    'collection': '1000',
     'infrustructures': ['SASDI', 'SANSA'],
     'metadata_json': {
         'additionalFields': {
