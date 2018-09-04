@@ -158,8 +158,10 @@ class AgentAPI(object):
         srch = Metadata.search(index=index)
         srch = srch.filter('match', record_id=identifier)
         srch.execute()
+        exists = False
         if srch.count() == 1:
             srch.delete()
+            exists = True
 
         Metadata.init(index=index)
         try:
@@ -180,6 +182,10 @@ class AgentAPI(object):
             return output
 
         output['success'] = True
+        if exists:
+            output['msg'] = 'Record replaced'
+        else:
+            output['msg'] = 'Record added'
         return output
 
     @cherrypy.expose
@@ -230,8 +236,8 @@ class AgentAPI(object):
         srch = srch.filter('match', record_id=record_id)
         srch.execute()
         if srch.count() == 0:
-            msg = "Error: record {} not found".format(record_id)
-            output['msg'] = msg
+            output['msg'] = "Record not found"
+            output['success'] = True
             return output
         if srch.count() > 1 and not force:
             msg = "Error: duplicate records found with id {}. ".format(
@@ -241,7 +247,7 @@ class AgentAPI(object):
             return output
         srch.delete()
         output['success'] = True
-        output['msg'] = 'Record {} deleted'.format(record_id)
+        output['msg'] = 'Record deleted'
         return output
 
     @cherrypy.expose
