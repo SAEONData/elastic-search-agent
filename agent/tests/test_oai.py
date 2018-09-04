@@ -47,6 +47,19 @@ def request_list_identifiers(token=None):
     return response.text
 
 
+def request_list_records(token=None):
+    url = "{}/oaipmh?verb=ListRecords&metadataPrefix=oai_dc".format(
+        server_url)
+    if token:
+        url += '&resumptionToken={}'.format(token)
+    response = requests.get(url=url)
+    if response.status_code != 200:
+        raise RuntimeError('Request failed with return code: %s' % (
+            response.status_code))
+
+    return response.text
+
+
 def list_identifiers():
     text = request_list_identifiers()
 
@@ -68,7 +81,7 @@ def list_identifiers():
             len(identifiers)))
         return
 
-    print('Page 1 complete')
+    print('list_identifiers: Page 1 complete')
 
     done = False
     loop = 1
@@ -101,10 +114,68 @@ def list_identifiers():
         if cnt != 10:
             print('{} headers returned'.format(cnt))
             done = True
-        print('Page {} complete'.format(loop))
+        print('list_identifiers: Page {} complete'.format(loop))
+
+
+def list_records():
+    text = request_list_records()
+
+    try:
+        root = ET.fromstring(text)
+    except Exception:
+        raise RuntimeError('Response text is not valid XML')
+
+    # Collect identifiers to look for duplicates
+    identifiers = []
+    cnt = 0
+    for i in root.iter('{http://www.openarchives.org/OAI/2.0/}identifier'):
+        cnt += 1
+        print('{}. {}'.format(cnt, i.text))
+        identifiers.append(i.text)
+
+    if len(identifiers) != 10:
+        print('{} headers returned'.format(
+            len(identifiers)))
+        return
+
+    print('list_records: Page 1 complete')
+
+    done = False
+    loop = 1
+    while not done:
+        time.sleep(2)
+        loop += 1
+
+        tokens = list(root.iter(
+            '{http://www.openarchives.org/OAI/2.0/}resumptionToken'))
+        try:
+            token = tokens[0].text
+        except Exception:
+            raise RuntimeError('resumptionToken not found')
+
+        # All good, now get next 10
+        text = request_list_records(token=token)
+        try:
+            root = ET.fromstring(text)
+        except Exception:
+            raise RuntimeError('Response text is not valid XML')
+
+        cnt = 0
+        for i in root.iter('{http://www.openarchives.org/OAI/2.0/}identifier'):
+            cnt += 1
+            print('{}. {}'.format(cnt, i.text))
+            if i.text in identifiers:
+                raise RuntimeError('Identifier {} found previously'.format(
+                    i.text))
+            identifiers.append(i.text)
+        if cnt != 10:
+            print('{} headers returned'.format(cnt))
+            done = True
+        print('list_records: Page {} complete'.format(loop))
 
 
 if __name__ == "__main__":
     list_identifiers_bad_verb()
     list_identifiers_bad_arg()
     list_identifiers()
+    list_records()
