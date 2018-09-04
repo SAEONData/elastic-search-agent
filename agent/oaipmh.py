@@ -1,15 +1,16 @@
-from agent.config import repositoryName
-from agent.config import baseURL
-from agent.config import protocolVersion
 from agent.config import adminEmail
-from agent.config import earliestDatestamp
-from agent.config import deletedRecord
-from agent.config import granularity
+from agent.config import baseURL
 from agent.config import compressions
-from agent.config import scheme
-from agent.config import repositoryIdentifier
+from agent.config import deletedRecord
 from agent.config import delimiter
+from agent.config import earliestDatestamp
+from agent.config import granularity
+from agent.config import metadata_index_name
+from agent.config import protocolVersion
+from agent.config import repositoryIdentifier
+from agent.config import repositoryName
 from agent.config import sampleIdentifier
+from agent.config import scheme
 from agent.datacite_export import generateXMLDataCite
 from agent.oai_dc_export import generateXMLDC
 from agent.persist import Metadata
@@ -45,7 +46,7 @@ def format_identifier(root, record):
     el_header = ET.SubElement(root, "header")
     try:
         set_spec = record.set_spec
-        record = record.to_dict().get('record')
+        record = record.to_dict().get('record').get('metadata_json')
         if record.get('identifier', '') != '':
             child = ET.SubElement(el_header, 'identifier')
             child.text = record['identifier']['identifier']
@@ -75,13 +76,16 @@ def format_records(root, records, prefix, md_token=None):
         try:
             if prefix == 'datacite':
                 generateXMLDataCite(
-                    el_record, record.to_dict().get('record'))
+                    el_record,
+                    record.to_dict().get('record').get('metadata_json'))
             elif prefix == 'oai_datacite':
                 generateXMLDataCite(
-                    el_record, record.to_dict().get('record'))
+                    el_record,
+                    record.to_dict().get('record').get('metadata_json'))
             elif prefix == 'oai_dc':
                 generateXMLDC(
-                    el_record, record.to_dict().get('record'))
+                    el_record,
+                    record.to_dict().get('record').get('metadata_json'))
         except AttributeError as e:
             print('AttributeError: {}'.format(e))
             raise
@@ -103,7 +107,7 @@ def get_record(root, request_element, **kwargs):
         if k == 'metadataPrefix':
             prefix = kwargs[k]
         elif k == 'identifier':
-            key = 'record.identifier.identifier'
+            key = 'record.metadata_json.identifier.identifier'
             qry = Q({"match": {key: kwargs[k]}})
         else:
             child = ET.SubElement(root, 'error', {'code': 'badArgument'})
@@ -179,6 +183,7 @@ def list_results(root, request_element, form, **kwargs):
     until_date = None
     prefix = 'datacite'
     query = dict()
+    query['index'] = metadata_index_name
     for k in kwargs:
         if k == 'verb':
             # ignore
@@ -241,12 +246,12 @@ def list_results(root, request_element, form, **kwargs):
             return root
 
     if from_date:
-        query['record.from'] = from_date
+        query['from'] = from_date
     if until_date:
-        query['record.to'] = until_date
-    query['record.sort'] = 'identifier.identifier'
-    query['record.start'] = md_cursor + 1
-    query['record.size'] = SIZE
+        query['to'] = until_date
+    query['sort'] = 'record.metadata_json.identifier.identifier'
+    query['start'] = md_cursor + 1
+    query['size'] = SIZE
 
     response = search(**query)
     if not response.get('success', False):
@@ -300,11 +305,12 @@ def identity(root, host, repositoryName, baseURL, protocolVersion, adminEmail,
     child = ET.SubElement(root, 'adminEmail')
     child.text = adminEmail
     years = search(**{
-        'record.size': 1,
-        'record.fields': 'publicationYear',
-        'record.sort': 'publicationYear'})
+        'index': metadata_index_name,
+        'size': 1,
+        'fields': 'record.metadata_json.publicationYear',
+        'sort': 'record.metadata_json.publicationYear'})
     if years.get('success'):
-        year = [y for y in years['result']][0]['record']['publicationYear']
+        year = [y for y in years['result']][0]['record']['metadata_json']['publicationYear']
         child = ET.SubElement(root, 'earliestDatestamp')
         child.text = earliestDatestamp.format(year)
     child = ET.SubElement(root, 'deletedRecord')

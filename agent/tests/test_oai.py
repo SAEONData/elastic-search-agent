@@ -1,13 +1,12 @@
 import requests
 import time
 import xml.etree.ElementTree as ET
-
-serviceUrl = "http://localhost:8080"
+from agent.config import server_url
 
 
 def list_identeifiers_bad_verb():
     response = requests.get(
-        url="{}/oaipmh?verb=Identifiers&metadataPrefix=oai_dc".format(serviceUrl)
+        url="{}/oaipmh?verb=Identifiers&metadataPrefix=oai_dc".format(server_url)
     )
     if response.status_code != 200:
         raise RuntimeError('Request failed with return code: %s' % (
@@ -20,7 +19,7 @@ def list_identeifiers_bad_verb():
 
 def list_identeifiers_bad_arg():
     response = requests.get(
-        url="{}/oaipmh?verb=ListIdentifiers&Prefix=oai_dc".format(serviceUrl)
+        url="{}/oaipmh?verb=ListIdentifiers&Prefix=oai_dc".format(server_url)
     )
     if response.status_code != 200:
         raise RuntimeError('Request failed with return code: %s' % (
@@ -37,7 +36,7 @@ def find_tag_contents(tag, text):
 
 def request_list_identifiers(token=None):
     url = "{}/oaipmh?verb=ListIdentifiers&metadataPrefix=oai_dc".format(
-        serviceUrl)
+        server_url)
     if token:
         url += '&resumptionToken={}'.format(token)
     response = requests.get(url=url)
@@ -53,7 +52,7 @@ def list_identifiers():
 
     try:
         root = ET.fromstring(text)
-    except:
+    except Exception:
         raise RuntimeError('Response text is not valid XML')
 
     # Collect identifiers to look for duplicates
@@ -81,14 +80,14 @@ def list_identifiers():
             '{http://www.openarchives.org/OAI/2.0/}resumptionToken')
         try:
             token = token.text
-        except:
+        except Exception:
             raise RuntimeError('resumptionToken not found')
 
         # All good, now get next 10
         text = request_list_identifiers(token=token)
         try:
             root = ET.fromstring(text)
-        except:
+        except Exception:
             raise RuntimeError('Response text is not valid XML')
 
         cnt = 0

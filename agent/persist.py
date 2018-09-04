@@ -1,3 +1,4 @@
+from agent.config import es_domain
 from agent.config import es_port
 from agent.config import token_index_name
 from datetime import datetime
@@ -15,7 +16,7 @@ from elasticsearch_dsl import Object
 from elasticsearch_dsl import Text
 
 es_connection = connections.create_connection(
-    hosts=['localhost:{}'.format(es_port)],
+    hosts=['{}:{}'.format(es_domain, es_port)],
     timeout=20)
 
 html_strip = analyzer(
