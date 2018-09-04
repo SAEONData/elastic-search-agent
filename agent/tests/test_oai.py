@@ -4,7 +4,7 @@ import xml.etree.ElementTree as ET
 from agent.config import server_url
 
 
-def list_identeifiers_bad_verb():
+def list_identifiers_bad_verb():
     response = requests.get(
         url="{}/oaipmh?verb=Identifiers&metadataPrefix=oai_dc".format(server_url)
     )
@@ -14,10 +14,10 @@ def list_identeifiers_bad_verb():
 
     if 'badVerb' not in response.text:
         raise RuntimeError('badVerb not found on response text')
-    print('list_identeifiers_bad_verb passed')
+    print('list_identifiers_bad_verb passed')
 
 
-def list_identeifiers_bad_arg():
+def list_identifiers_bad_arg():
     response = requests.get(
         url="{}/oaipmh?verb=ListIdentifiers&Prefix=oai_dc".format(server_url)
     )
@@ -27,7 +27,7 @@ def list_identeifiers_bad_arg():
 
     if 'badArgument' not in response.text:
         raise RuntimeError('badArgument not found on response text')
-    print('list_identeifiers_bad_arg passed')
+    print('list_identifiers_bad_arg passed')
 
 
 def find_tag_contents(tag, text):
@@ -105,6 +105,6 @@ def list_identifiers():
 
 
 if __name__ == "__main__":
-    list_identeifiers_bad_verb()
-    list_identeifiers_bad_arg()
+    list_identifiers_bad_verb()
+    list_identifiers_bad_arg()
     list_identifiers()
