@@ -46,7 +46,7 @@ def format_identifier(root, record):
     el_header = ET.SubElement(root, "header")
     try:
         collection = record.collection
-        record = record.to_dict().get('record').get('metadata_json')
+        record = record.to_dict().get('metadata_json')
         if record.get('identifier', '') != '':
             child = ET.SubElement(el_header, 'identifier')
             child.text = record['identifier']['identifier']
@@ -77,15 +77,15 @@ def format_records(root, records, prefix, md_token=None):
             if prefix == 'datacite':
                 generateXMLDataCite(
                     el_record,
-                    record.to_dict().get('record').get('metadata_json'))
+                    record.to_dict().get('metadata_json'))
             elif prefix == 'oai_datacite':
                 generateXMLDataCite(
                     el_record,
-                    record.to_dict().get('record').get('metadata_json'))
+                    record.to_dict().get('metadata_json'))
             elif prefix == 'oai_dc':
                 generateXMLDC(
                     el_record,
-                    record.to_dict().get('record').get('metadata_json'))
+                    record.to_dict().get('metadata_json'))
         except AttributeError as e:
             print('AttributeError: {}'.format(e))
             raise
@@ -107,7 +107,7 @@ def get_record(root, request_element, **kwargs):
         if k == 'metadataPrefix':
             prefix = kwargs[k]
         elif k == 'identifier':
-            key = 'record.metadata_json.identifier.identifier'
+            key = 'metadata_json.identifier.identifier'
             qry = Q({"match": {key: kwargs[k]}})
         else:
             child = ET.SubElement(root, 'error', {'code': 'badArgument'})
@@ -249,7 +249,7 @@ def list_results(root, request_element, form, **kwargs):
         query['from'] = from_date
     if until_date:
         query['to'] = until_date
-    query['sort'] = 'record.metadata_json.identifier.identifier'
+    query['sort'] = 'metadata_json.identifier.identifier'
     query['start'] = md_cursor + 1
     query['size'] = SIZE
 
@@ -307,10 +307,10 @@ def identity(root, host, repositoryName, baseURL, protocolVersion, adminEmail,
     years = search(**{
         'index': metadata_index_name,
         'size': 1,
-        'fields': 'record.metadata_json.publicationYear',
-        'sort': 'record.metadata_json.publicationYear'})
+        'fields': 'metadata_json.publicationYear',
+        'sort': 'metadata_json.publicationYear'})
     if years.get('success'):
-        year = [y for y in years['result']][0]['record']['metadata_json']['publicationYear']
+        year = [y for y in years['result']][0]['metadata_json']['publicationYear']
         child = ET.SubElement(root, 'earliestDatestamp')
         child.text = earliestDatestamp.format(year)
     child = ET.SubElement(root, 'deletedRecord')
