@@ -17,6 +17,7 @@ from agent.utils import get_request_host
 from agent.utils import json_handler
 from agent.utils import format_json_dates
 from agent.utils import validate_metadata_record
+from elasticsearch_dsl import Index
 from elasticsearch_dsl import Search
 
 
@@ -118,6 +119,32 @@ class AgentAPI(object):
             output['msg'] = msg
             return output
         srch.delete()
+
+        output['success'] = True
+        return output
+
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def delete_index(self, **kwargs):
+        cherrypy.log(str(kwargs))
+        output = {'success': False}
+        index = kwargs.get('index')
+        if index is None:
+            msg = "Error: 'index' argument is required"
+            output['msg'] = msg
+            return output
+        idx = Index(index)
+        if not idx.exists():
+            msg = "Error: index {} does not exist".format(index)
+            output['msg'] = msg
+            return output
+
+        try:
+            idx.delete()
+        except Exception as e:
+            msg = "Error: delete index failed: resean {}".format(e)
+            output['msg'] = msg
+            return output
 
         output['success'] = True
         return output
