@@ -41,7 +41,6 @@ JSON_DICT = {
         'alternateIdentifiers': [{
             'alternateIdentifier': 'http://schema.datacite.org/schema/meta/kernel-3.1/example/datacite-example-full-v3.1.xml',
             'alternateIdentifierType': 'URL'}],
-        'bounds': [-68.302, 30.233, -66.302, 32.233000000000004],
         'contributors': [{
             'affiliation': 'California Digital Library',
             'contributorName': 'Starr, Joan',

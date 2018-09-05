@@ -198,7 +198,6 @@ JSON_DICTS = [{
             "resourceType": "on",
             "sizes": [],
             "resourceTypeGeneral": "",
-            "bounds": [],
             "alternateIdentifiers": [],
             "titles": [
                 {
@@ -290,7 +289,6 @@ JSON_DICTS = [{
             "resourceType": "on",
             "sizes": [],
             "resourceTypeGeneral": "",
-            "bounds": [],
             "alternateIdentifiers": [],
             "titles": [
                 {
