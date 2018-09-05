@@ -443,7 +443,7 @@ class AgentAPI(object):
         api = ET.SubElement(body, "h3")
         api.text = 'JSON API'
 
-        # Create
+        # Createa Index
         child = ET.SubElement(api, "br")
         child = ET.SubElement(api, "br")
         add = ET.SubElement(api, "a", {
@@ -466,6 +466,26 @@ class AgentAPI(object):
         child = ET.SubElement(api, "span", {
             'style': 'font-size: 12'})
         child.text = '* record: a template records used to define the metadata structure'
+
+        # Delete Index
+        child = ET.SubElement(api, "br")
+        child = ET.SubElement(api, "br")
+        add = ET.SubElement(api, "a", {
+            'href': '{}/delete_index'.format(url)
+        })
+        add.text = 'Delete Index'
+        child = ET.SubElement(api, "br")
+        child = ET.SubElement(api, "span", {
+            'style': 'font-size: 12'})
+        child.text = "Delete an index"
+        child = ET.SubElement(api, "br")
+        child = ET.SubElement(api, "span", {
+            'style': 'font-size: 12'})
+        child.text = 'Arguments:'
+        child = ET.SubElement(api, "br")
+        child = ET.SubElement(api, "span", {
+            'style': 'font-size: 12'})
+        child.text = '* index: name of indexto be deleted'
 
         # Search
         ET.SubElement(api, "br")
