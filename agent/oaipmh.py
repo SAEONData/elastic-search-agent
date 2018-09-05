@@ -42,10 +42,10 @@ def find_resumption_token(md_token):
 
 
 def format_identifier(root, record):
-    set_spec = ''
+    collection = ''
     el_header = ET.SubElement(root, "header")
     try:
-        set_spec = record.set_spec
+        collection = record.collection
         record = record.to_dict().get('record').get('metadata_json')
         if record.get('identifier', '') != '':
             child = ET.SubElement(el_header, 'identifier')
@@ -57,9 +57,9 @@ def format_identifier(root, record):
             child = ET.SubElement(el_header, 'datestamp')
             child.text = dc_date
 
-        if set_spec:
+        if collection:
             child = ET.SubElement(el_header, 'setSpec')
-            child.text = set_spec
+            child.text = collection
     except AttributeError as e:
         raise RuntimeError('AttributeError: {}'.format(e))
 
@@ -192,7 +192,7 @@ def list_results(root, request_element, form, **kwargs):
         if k == 'metadataPrefix':
             prefix = kwargs[k]
         elif k == 'set':
-            query['set_spec'] = kwargs[k]
+            query['collection'] = kwargs[k]
         elif k == 'from':
             from_date = kwargs[k]
         elif k == 'until':

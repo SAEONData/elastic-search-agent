@@ -4,12 +4,15 @@ from agent.config import metadata_index_name
 from agent.config import server_url
 
 
-def add_a_metadata_record(data, set_spec=''):
+def add_a_metadata_record(collection, metadata_json, organization, record_id, infrustructures):
 
     data = {
-        'record': json.dumps(data),
+        'metadata_json': json.dumps(metadata_json),
         'index': metadata_index_name,
-        'set_spec': set_spec
+        'collection': collection,
+        'infrustructures': infrustructures,
+        'organization': organization,
+        'record_id': record_id,
     }
     response = requests.post(
         url="{}/add".format(server_url),
@@ -29,14 +32,20 @@ def add_metadata_records(repeats=1):
         for data in JSON_DICTS:
             cnt += 1
             # print('Add record {}'.format(cnt))
-            # data['identifier']['identifier'] = gen_unique_id()
-            add_a_metadata_record(data, set_spec='add_test')
+            add_a_metadata_record(
+                collection=data['collection'],
+                infrustructures=data['infrustructures'],
+                metadata_json=data['metadata_json'],
+                organization=data['organization'],
+                record_id=data['record_id'],
+            )
 
 
 JSON_DICTS = [{
     'organization': 'WebTide',
     'collection': '1000',
     'infrustructures': ['SASDI', 'SANSA'],
+    'record_id': '10.5072/example-full',
     'metadata_json':
         {
             'additionalFields': {
@@ -53,7 +62,6 @@ JSON_DICTS = [{
             'alternateIdentifiers': [{
                 'alternateIdentifier': 'http://schema.datacite.org/schema/meta/kernel-3.1/example/datacite-example-full-v3.1.xml',
                 'alternateIdentifierType': 'URL'}],
-            'bounds': [-68.302, 30.233, -66.302, 32.233000000000004],
             'contributors': [{
                 'affiliation': 'California Digital Library',
                 'contributorName': 'Starr, Joan',
@@ -126,6 +134,7 @@ JSON_DICTS = [{
     'organization': 'WebTide',
     'collection': '1000',
     'infrustructures': ['SASDI', 'SANSA'],
+    'record_id': "12345/ABC",
     'metadata_json':
         {
             "subtitle": "",
@@ -209,6 +218,7 @@ JSON_DICTS = [{
     'organization': 'WebTide',
     'collection': '2000',
     'infrustructures': ['SASDI'],
+    'record_id': "12345/XYZ",
     'metadata_json':
         {
             "subtitle": "",

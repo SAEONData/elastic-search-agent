@@ -7,7 +7,7 @@ from agent.config import server_url
 def create_new_index():
 
     data = {
-        'record': json.dumps(JSON_DICT),
+        'metadata_json': json.dumps(JSON_DICT['metadata_json']),
         'index': metadata_index_name,
     }
     response = requests.post(

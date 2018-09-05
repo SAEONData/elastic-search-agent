@@ -49,7 +49,7 @@ def import_metadata_records():
                 'infrustructures': ['SASDI', 'SANSA'],
                 'metadata_json': record['jsonData']
             }
-            add_a_metadata_record(new_record, set_spec='Import')
+            add_a_metadata_record(new_record, collection='TestImport')
 
 
 if __name__ == "__main__":
