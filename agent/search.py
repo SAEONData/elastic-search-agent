@@ -1,6 +1,5 @@
 import logging
 from datetime import datetime
-from agent.config import metadata_index_name
 from agent.persist import Metadata
 from elasticsearch.exceptions import TransportError
 from elasticsearch_dsl import DateHistogramFacet
@@ -12,15 +11,17 @@ from elasticsearch_dsl import TermsFacet
 logger = logging.getLogger(__name__)
 
 
-def search_all():
-    srch = Metadata.search()
+def search_all(index):
+    srch = Metadata.search(index=index)
+    logger.info('search_all in index {}'.format(index))
     return {'success': True, 'result': srch.scan()}
 
 
-def search(**kwargs):
-    mapping = Mapping.from_es(metadata_index_name, 'doc')
+def search(index, **kwargs):
     output = {'success': False}
-    srch = Metadata.search()
+    mapping = Mapping.from_es(index, 'doc')
+    srch = Metadata.search(index=index)
+    logger.info('search in index {}'.format(index))
     source_fields = ''
     sort_field = None
     from_date = None
@@ -36,36 +37,36 @@ def search(**kwargs):
     q_list = []
     for key in kwargs:
         logger.debug('------------------------' + key)
-        if key == 'record.fields':
+        if key == 'fields':
             source_fields = kwargs[key]
             continue
-        elif key == 'record.start':
+        elif key == 'start':
             start = kwargs[key]
             continue
-        elif key == 'record.size':
+        elif key == 'size':
             size = kwargs[key]
             continue
-        elif key == 'record.sort':
+        elif key == 'sort':
             sort_field = kwargs[key]
             continue
-        elif key == 'record.from':
+        elif key == 'from':
             from_date = kwargs[key]
             continue
-        elif key == 'record.to':
+        elif key == 'to':
             to_date = kwargs[key]
             continue
-        elif key == 'record.dates.dateType':
+        elif key == 'dates.dateType':
             date_type = kwargs[key].lower()
             continue
-        elif key in 'record.encloses':
+        elif key in 'encloses':
             relation = 'within'
             coords = kwargs[key]
             continue
-        elif key in 'record.includes':
+        elif key in 'includes':
             relation = 'contains'
             coords = kwargs[key]
             continue
-        elif key in 'record.overlaps':
+        elif key in 'overlaps':
             relation = 'intersects'
             coords = kwargs[key]
             continue
@@ -87,10 +88,10 @@ def search(**kwargs):
         logger.debug('Sort on {}'.format(sort_field))
         if sort_field.startswith('-'):
             sort_field = sort_field[1:]
-            sort_field_name = 'record.{}'.format(sort_field)
+            sort_field_name = sort_field
             sort_field = {sort_field_name: {'order': 'desc'}}
         else:
-            sort_field_name = 'record.{}'.format(sort_field)
+            sort_field_name = sort_field
             sort_field = {sort_field_name: {'order': 'asc'}}
 
         field_type = mapping.resolve_field(sort_field_name)
@@ -108,8 +109,8 @@ def search(**kwargs):
         new_fields = []
         for field in source_fields.split(','):
             field = field.strip()
-            logger.debug('limit output field: record.{}'.format(field))
-            field_name = 'record.{}'.format(field)
+            logger.debug('limit output field: {}'.format(field))
+            field_name = field
             if mapping.resolve_field(field_name) is None:
                 msg = 'Unknown source field: {}'.format(field)
                 output['error'] = msg
@@ -139,16 +140,16 @@ def search(**kwargs):
         dates = []
         if from_date:
             dates.append(
-                {'range': {'record.dates.date.lte': {'gte': from_date}}})
+                {'range': {'record.metadata_json.dates.date.lte': {'gte': from_date}}})
         if to_date:
             dates.append(
-                {'range': {'record.dates.date.gte': {'lte': to_date}}})
+                {'range': {'record.metadata_json.dates.date.gte': {'lte': to_date}}})
         if date_type:
             dates.append(
-                {'term': {'record.dates.dateType': date_type}})
+                {'term': {'record.metadata_json.dates.dateType': date_type}})
         filters.append({'bool': {'must': dates}})
     elif date_type:
-        q_list.append(Q({"match": {'record.dates.dateType': date_type}}))
+        q_list.append(Q({"match": {'record.metadata_json.dates.dateType': date_type}}))
 
     if relation:
         try:
@@ -156,7 +157,7 @@ def search(**kwargs):
             coords = [float(i) for i in coords]
             afilter = {
                 "geo_shape": {
-                    "record.geoLocations.geoLocationBox": {
+                    "record.metadata_json.geoLocations.geoLocationBox": {
                         "shape": {
                             "type": "envelope",
                             "coordinates": [[coords[0], coords[1]], [coords[2], coords[3]]]
@@ -169,7 +170,7 @@ def search(**kwargs):
             if relation in ['within', 'intersects']:
                 afilter = {
                     "geo_bounding_box": {
-                        "record.geoLocations.geoLocationPoint": {
+                        "record.metadata_json.geoLocations.geoLocationPoint": {
                             "top_left": {
                                 "lat": coords[0],
                                 "lon": coords[1]
@@ -251,15 +252,15 @@ def search(**kwargs):
 
 
 all_facets = {
-    'subjects': TermsFacet(field='record.subjects.subject.raw'),
-    'creators': TermsFacet(field='record.creators.creatorName.raw'),
-    'publicationYear': TermsFacet(field='record.publicationYear'),
-    'publisher': TermsFacet(field='record.publisher.raw'),
+    'subjects': TermsFacet(field='record.metadata_json.subjects.subject.raw'),
+    'creators': TermsFacet(field='record.metadata_json.creators.creatorName.raw'),
+    'publicationYear': TermsFacet(field='record.metadata_json.publicationYear'),
+    'publisher': TermsFacet(field='record.metadata_json.publisher.raw'),
     'collectedStartDate': DateHistogramFacet(
-        field='record.dates.date.gte',
+        field='record.metadata_json.dates.date.gte',
         interval="month"),
     'collectedEndDate': DateHistogramFacet(
-        field='record.dates.date.lte',
+        field='record.metadata_json.dates.date.lte',
         interval="month"),
 }
 
@@ -267,13 +268,12 @@ all_facets = {
 class MetadataSearch(FacetedSearch):
 
     doc_types = [Metadata, ]
-    index = metadata_index_name
     date_query = {
         'simple_query_string':
-            {'fields': ['record.dates.dateType'], 'query': 'Collected'}
+            {'fields': ['record.metadata_json.dates.dateType'], 'query': 'Collected'}
     }
     date_filter = [
-        {'term': {'record.dates.dateType': 'Collected'}}
+        {'term': {'record.metadata_json.dates.dateType': 'Collected'}}
     ]
 
     fields = [
@@ -282,6 +282,8 @@ class MetadataSearch(FacetedSearch):
     def __init__(self, **kwargs):
         facet = None
         self.facets = {}
+        if kwargs.get('index'):
+            self.index = kwargs.pop('index')
         if kwargs.get('facet'):
             facet = kwargs.pop('facet')
         if facet is None:
@@ -297,7 +299,7 @@ class MetadataSearch(FacetedSearch):
         print(str(self.facets))
         if 'collectedStartDate' in self.facets or \
            'collectedEndDate' in self.facets:
-            date_type = {'fields': ['record.dates.dateType'],
+            date_type = {'fields': ['record.metadata_json.dates.dateType'],
                          'query': 'Collected'}
             s.query = {'simple_query_string': date_type}
         return s.filter()

@@ -1,9 +1,11 @@
 
 # CherryPy testng details
+server_domain = 'localhost'
 server_port = 9210
-server_url = 'http://localhost:{}'.format(server_port)
+server_url = 'http://{}:{}'.format(server_domain, server_port)
 
 # ES details
+es_domain = 'localhost'
 es_port = 9200
 metadata_index_name = 'md_index_1'
 token_index_name = 'rt_index_1'

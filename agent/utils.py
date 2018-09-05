@@ -1,6 +1,93 @@
 import cherrypy
 import json
+import logging
 from datetime import datetime
+from elasticsearch_dsl import Index
+
+
+logger = logging.getLogger(__name__)
+
+
+def format_geo_point(point):
+    results = point.split(' ')
+    results = [i for i in filter(('').__ne__, results)]
+    results = ','.join(results)
+    return results
+
+
+def format_geo_box(box):
+    results = box.split(' ')
+    results = [float(i) for i in filter(('').__ne__, results)]
+    coords = "(({} {}, {} {}, {} {}, {} {}, {} {}))".format(
+        results[2], results[1],
+        results[0], results[1],
+        results[0], results[3],
+        results[2], results[3],
+        results[2], results[1])
+    results = 'POLYGON {}'.format(coords)
+    # print('format_geo_box: {}'.format(results))
+    return results
+
+
+def validate_metadata_record(record):
+    output = {'success': False}
+    if not record.get('metadata_json'):
+        msg = "metadata_json is required"
+        output['msg'] = msg
+        return output
+    try:
+        identifier = record['metadata_json']['identifier']['identifier']
+    except Exception as e:
+        msg = "identifier is required"
+        logger.debug('Exception: {}: {}'.format(msg, e))
+        output['msg'] = msg
+        return output
+    if identifier == '':
+        msg = "identifier is required"
+        output['msg'] = msg
+        return output
+
+    # Hack to fix rights
+    rights = record['metadata_json'].get('rights')
+    if rights == '':
+        record['rights'] = []
+
+    # Hack to fix dates
+    dates = record['metadata_json'].get('dates')
+    lst = []
+    for date_dict in dates:
+        if date_dict.get('date', '') != '':
+            new = dict()
+            if date_dict.get('dateType'):
+                new['dateType'] = date_dict.get('dateType')
+            the_date = date_dict['date']
+            if '/' in the_date:
+                the_dates = the_date.split('/')
+                new['date'] = {'gte': the_dates[0], 'lte': the_dates[1]}
+            else:
+                new['date'] = {'gte': the_date, 'lte': the_date}
+            lst.append(new)
+    logger.debug(lst)
+    record['metadata_json']['dates'] = lst
+
+    # Hack to fix geoLocations
+    geoLocations = record['metadata_json'].get('geoLocations')
+    if geoLocations:
+        for geoLocation in geoLocations:
+            if geoLocation.get('geoLocationPoint'):
+                geoLocation['geoLocationPoint'] = \
+                    format_geo_point(geoLocation['geoLocationPoint'])
+            if geoLocation.get('geoLocationBox'):
+                geoLocation['geoLocationBox'] = \
+                    format_geo_box(geoLocation['geoLocationBox'])
+
+    output['success'] = True
+    return output
+
+
+def index_exists(index):
+    idx = Index(index)
+    return idx.exists()
 
 
 def gen_unique_id():
@@ -24,6 +111,7 @@ class _JSONEncoder(json.JSONEncoder):
         # Adapted from cherrypy/_cpcompat.py
         for chunk in super().iterencode(value):
             yield chunk.encode("utf-8")
+
 
 json_encoder = _JSONEncoder()
 
@@ -60,9 +148,9 @@ def format_json_dates(hits):
     for result in hits:
         result = result.to_dict()
         new_dates = []
-        for dates in result['record'].get('dates', []):
+        for dates in result['record']['metadata_json'].get('dates', []):
             new_dates.append(format_json_date(dates))
-        result['record']['dates'] = new_dates
+        result['record']['metadata_json']['dates'] = new_dates
         results.append(result)
 
     return results

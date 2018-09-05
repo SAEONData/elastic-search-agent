@@ -1,3 +1,0 @@
-requests
-cherrypy
-elasticsearch_dsl

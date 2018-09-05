@@ -29,9 +29,9 @@ def import_metadata_records():
     # paths.append("Institutions/coj/coj/metadata")
     # paths.append("Portals/test-mike/testcustmike/metadata")
     # paths.append('Institutions/coj/coj/metadata')
-    # paths.append("Institutions/sa-risk-and-vulnerability-atlas/sarva/metadata")
+    paths.append("Institutions/sa-risk-and-vulnerability-atlas/sarva/metadata")
     # paths.append("Institutions/geoss/geoss/metadata")
-    paths.append("Institutions/south-african-national-biodiversity-institute/south-african-national-biodiversity-institute")
+    # paths.append("Institutions/south-african-national-biodiversity-institute/south-african-national-biodiversity-institute")
     for path in paths:
         records = import_metadata_record(path)
         if records.startswith('There is nothing here'):
@@ -43,7 +43,13 @@ def import_metadata_records():
             if not record['jsonData']['identifier']['identifier']:
                 record['jsonData']['identifier']['identifier'] = gen_unique_id()
                 record['jsonData']['identifier']['identifierType'] = 'internal'
-            add_a_metadata_record(record['jsonData'], set_spec='Import')
+            new_record = {
+                'organization': 'WebTide',
+                'collection': '1000',
+                'infrustructures': ['SASDI', 'SANSA'],
+                'metadata_json': record['jsonData']
+            }
+            add_a_metadata_record(new_record, set_spec='Import')
 
 
 if __name__ == "__main__":
