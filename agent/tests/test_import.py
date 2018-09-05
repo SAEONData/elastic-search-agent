@@ -40,16 +40,18 @@ def import_metadata_records():
         records = json.loads(records)
         for record in records['content']:
             time.sleep(0.5)
-            if not record['jsonData']['identifier']['identifier']:
-                record['jsonData']['identifier']['identifier'] = gen_unique_id()
+            record_id = record['jsonData']['identifier']['identifier']
+            if not record_id:
+                record_id = gen_unique_id()
+                record['jsonData']['identifier']['identifier'] = record_id
                 record['jsonData']['identifier']['identifierType'] = 'internal'
-            new_record = {
-                'organization': 'WebTide',
-                'collection': '1000',
-                'infrustructures': ['SASDI', 'SANSA'],
-                'metadata_json': record['jsonData']
-            }
-            add_a_metadata_record(new_record, collection='TestImport')
+            add_a_metadata_record(
+                record_id=record_id,
+                organization='WebTide',
+                infrustructures=['SASDI', 'SANSA'],
+                metadata_json=record['jsonData'],
+                collection='TestImport'
+            )
 
 
 if __name__ == "__main__":
