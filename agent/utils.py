@@ -138,15 +138,25 @@ def format_json_date(date_in):
     return date_dict
 
 
-def format_json_dates(hits):
+def format_json_dates(result):
     # Convert dates
+    new_dates = []
+    for dates in result['metadata_json'].get('dates', []):
+        new_dates.append(format_json_date(dates))
+    result['metadata_json']['dates'] = new_dates
+
+
+def format_metadata(hits):
+    # Convert certain fields
     results = []
     for result in hits:
         result = result.to_dict()
-        new_dates = []
-        for dates in result['metadata_json'].get('dates', []):
-            new_dates.append(format_json_date(dates))
-        result['metadata_json']['dates'] = new_dates
+        if result.get('metadata_json'):
+            format_json_dates(result)
+        infrastructures = result.get('infrastructures', [])
+        if isinstance(infrastructures, str):
+            infrastructures = [infrastructures]
+        result['infrastructures'] = infrastructures
         results.append(result)
 
     return results

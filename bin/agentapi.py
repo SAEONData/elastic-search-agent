@@ -15,7 +15,7 @@ from agent.search import search
 from agent.utils import index_exists
 from agent.utils import get_request_host
 from agent.utils import json_handler
-from agent.utils import format_json_dates
+from agent.utils import format_metadata
 from agent.utils import validate_metadata_record
 from elasticsearch_dsl import Index
 from elasticsearch_dsl import Search
@@ -83,7 +83,7 @@ class AgentAPI(object):
             md = Metadata(
                 collection='dummy',
                 organization='dummy',
-                infrustructures=['d1'],
+                infrastructures=['d1'],
                 record_id=record_id,
                 metadata_json=metadata_json,
             )
@@ -164,11 +164,11 @@ class AgentAPI(object):
             msg = "Error: 'collection' argument is required"
             output['msg'] = msg
             return output
-        infrustructures = kwargs.get('infrustructures')
-        if infrustructures is None:
-            msg = "Error: 'infrustructures' argument is required"
-            output['msg'] = msg
-            return output
+        infrastructures = kwargs.get('infrastructures', [])
+        # if infrastructures is None:
+        #     msg = "Error: 'infrastructures' argument is required"
+        #     output['msg'] = msg
+        #     return output
         metadata_json = kwargs.get('metadata_json')
         if metadata_json is None:
             msg = "Error: 'metadata_json' argument is required"
@@ -215,7 +215,7 @@ class AgentAPI(object):
         try:
             md = Metadata(
                 collection=collection,
-                infrustructures=infrustructures,
+                infrastructures=infrastructures,
                 organization=organization,
                 record_id=record_id,
                 metadata_json=metadata_json,
@@ -337,7 +337,7 @@ class AgentAPI(object):
             output['error'] = response['error']
             return output
 
-        items = format_json_dates(response['result'])
+        items = format_metadata(response['result'])
 
         output['success'] = True
         output['result_length'] = len(items)

@@ -107,7 +107,9 @@ def search(index, **kwargs):
 
     if source_fields:
         new_fields = []
-        for field in source_fields.split(','):
+        if isinstance(source_fields, str):
+            source_fields = source_fields.split(',')
+        for field in source_fields:
             field = field.strip()
             logger.debug('limit output field: {}'.format(field))
             field_name = field

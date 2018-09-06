@@ -48,7 +48,7 @@ def import_metadata_records():
             add_a_metadata_record(
                 record_id=record_id,
                 organization='WebTide',
-                infrustructures=['SASDI', 'SANSA'],
+                infrastructures=['SASDI', 'SANSA'],
                 metadata_json=record['jsonData'],
                 collection='TestImport'
             )

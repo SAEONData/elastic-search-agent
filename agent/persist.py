@@ -12,7 +12,6 @@ from elasticsearch_dsl import GeoShape
 from elasticsearch_dsl import Keyword
 from elasticsearch_dsl import Integer
 from elasticsearch_dsl import MetaField
-from elasticsearch_dsl import Nested
 from elasticsearch_dsl import Object
 from elasticsearch_dsl import Text
 
@@ -31,7 +30,7 @@ html_strip = analyzer(
 class Metadata(DocType):
     created_at = Date()
     collection = Text()
-    infrastructures = Nested()
+    # infrastructures = Nested()
     metadata_json = Object()
     organization = Text()
     record_id = Keyword()

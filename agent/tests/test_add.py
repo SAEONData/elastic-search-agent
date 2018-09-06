@@ -4,13 +4,13 @@ from agent.config import metadata_index_name
 from agent.config import server_url
 
 
-def add_a_metadata_record(collection, metadata_json, organization, record_id, infrustructures):
+def add_a_metadata_record(collection, metadata_json, organization, record_id, infrastructures):
 
     data = {
         'metadata_json': json.dumps(metadata_json),
         'index': metadata_index_name,
         'collection': collection,
-        'infrustructures': infrustructures,
+        'infrastructures': infrastructures,
         'organization': organization,
         'record_id': record_id,
     }
@@ -34,7 +34,7 @@ def add_metadata_records(repeats=1):
             # print('Add record {}'.format(cnt))
             add_a_metadata_record(
                 collection=data['collection'],
-                infrustructures=data['infrustructures'],
+                infrastructures=data['infrastructures'],
                 metadata_json=data['metadata_json'],
                 organization=data['organization'],
                 record_id=data['record_id'],
@@ -44,7 +44,7 @@ def add_metadata_records(repeats=1):
 JSON_DICTS = [{
     'organization': 'WebTide',
     'collection': '1000',
-    'infrustructures': ['SASDI', 'SANSA'],
+    'infrastructures': ['SASDI'],
     'record_id': '10.5072/example-full',
     'metadata_json':
         {
@@ -133,7 +133,7 @@ JSON_DICTS = [{
 }, {
     'organization': 'WebTide',
     'collection': '1000',
-    'infrustructures': ['SASDI', 'SANSA'],
+    'infrastructures': ['SASDI', 'SANSA'],
     'record_id': "12345/ABC",
     'metadata_json':
         {
@@ -216,7 +216,7 @@ JSON_DICTS = [{
 }, {
     'organization': 'WebTide',
     'collection': '2000',
-    'infrustructures': ['SASDI'],
+    'infrastructures': [],
     'record_id': "12345/XYZ",
     'metadata_json':
         {
