@@ -29,73 +29,75 @@ html_strip = analyzer(
 
 class Metadata(DocType):
     created_at = Date()
-    set_spec = Text()
+    collection = Text()
+    # infrastructures = Nested()
+    metadata_json = Object()
+    organization = Text()
     record_id = Keyword()
-    record = Object()
 
     class Meta:
         using = es_connection
         dynamic_templates = MetaField([
             {
-                "record":
+                "metadata_json":
                     {
-                        "path_match": "record.metadata_json.identifier.identifier",
+                        "path_match": "metadata_json.identifier.identifier",
                         "match_mapping_type": "string",
                         "mapping": Keyword("not_analyzed")
                     }
             },
             {
-                "record":
+                "metadata_json":
                     {
-                        "path_match": "record.metadata_json.subjects.subject",
+                        "path_match": "metadata_json.subjects.subject",
                         "match_mapping_type": "string",
                         "mapping": Text(fields={'raw': Keyword()}),
                     }
             },
             {
-                "record":
+                "metadata_json":
                     {
-                        "path_match": "record.metadata_json.creators.creatorName",
+                        "path_match": "metadata_json.creators.creatorName",
                         "match_mapping_type": "string",
                         "mapping": Text(fields={'raw': Keyword()}),
                     }
             },
             {
-                "record":
+                "metadata_json":
                     {
-                        "path_match": "record.metadata_json.publicationYear",
+                        "path_match": "metadata_json.publicationYear",
                         "match_mapping_type": "string",
                         "mapping": Integer()
                     }
             },
             {
-                "record":
+                "metadata_json":
                     {
-                        "path_match": "record.metadata_json.publisher",
+                        "path_match": "metadata_json.publisher",
                         "match_mapping_type": "string",
                         "mapping": Text(fields={'raw': Keyword()}),
                     }
             },
             {
-                "record":
+                "metadata_json":
                     {
-                        "path_match": "record.metadata_json.dates.date",
+                        "path_match": "metadata_json.dates.date",
                         "match_mapping_type": "string",
                         "mapping": DateRange()
                     }
             },
             {
-                "record":
+                "metadata_json":
                     {
-                        "path_match": "record.metadata_json.geoLocations.geoLocationBox",
+                        "path_match": "metadata_json.geoLocations.geoLocationBox",
                         "match_mapping_type": "string",
                         "mapping": GeoShape()
                     }
             },
             {
-                "record":
+                "metadata_json":
                     {
-                        "path_match": "record.metadata_json.geoLocations.geoLocationPoint",
+                        "path_match": "metadata_json.geoLocations.geoLocationPoint",
                         "match_mapping_type": "string",
                         "mapping": GeoPoint()
                     }

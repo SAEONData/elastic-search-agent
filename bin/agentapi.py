@@ -15,8 +15,9 @@ from agent.search import search
 from agent.utils import index_exists
 from agent.utils import get_request_host
 from agent.utils import json_handler
-from agent.utils import format_json_dates
+from agent.utils import format_metadata
 from agent.utils import validate_metadata_record
+from elasticsearch_dsl import Index
 from elasticsearch_dsl import Search
 
 
@@ -48,9 +49,9 @@ class AgentAPI(object):
     def create_index(self, **kwargs):
         cherrypy.log(str(kwargs))
         output = {'success': False}
-        record = kwargs.get('record')
-        if record is None:
-            msg = "Error: 'record' argument is required"
+        metadata_json = kwargs.get('metadata_json')
+        if metadata_json is None:
+            msg = "Error: 'metadata_json' argument is required"
             output['msg'] = msg
             return output
         index = kwargs.get('index')
@@ -64,23 +65,28 @@ class AgentAPI(object):
             return output
 
         try:
-            record = json.loads(record)
+            metadata_json = json.loads(metadata_json)
         except Exception as e:
             msg = "Error: json format {}".format(e)
             output['msg'] = msg
             return output
 
-        validation = validate_metadata_record(record)
+        validation = validate_metadata_record(metadata_json)
         if not validation['success']:
             output['msg'] = validation['msg']
             return output
 
-        identifier = record['metadata_json']['identifier']['identifier']
+        record_id = metadata_json['identifier']['identifier']
 
         Metadata.init(index=index)
         try:
             md = Metadata(
-                record=record, record_id=identifier, set_spec='dummy')
+                collection='dummy',
+                organization='dummy',
+                infrastructures=['d1'],
+                record_id=record_id,
+                metadata_json=metadata_json,
+            )
             md.meta.index = index
         except Exception as e:
             msg = "Error: {}: {}".format('Creation failed', e)
@@ -91,24 +97,24 @@ class AgentAPI(object):
             md.save()
         except Exception as e:
             msg = "Error: {}: {} - {}".format(
-                'Save failed', identifier, e.info)
+                'Save failed', record_id, e.info)
             output['msg'] = msg
             return output
 
-        # Wait until record has been created - Do No Remove!
+        # Wait until metadata_json has been created - Do No Remove!
         time.sleep(3)
 
-        # Delete example record
+        # Delete template metadata_json
         srch = Metadata.search(index=index)
-        srch = srch.filter('match', record_id=identifier)
+        srch = srch.filter('match', record_id=record_id)
         srch.execute()
         if srch.count() == 0:
-            msg = "Error: record {} not found".format(identifier)
+            msg = "Error: metadata_json {} not found".format(record_id)
             output['msg'] = msg
             return output
         if srch.count() > 1 and not force:
             msg = "Error: duplicate records found with id {}. ".format(
-                identifier)
+                record_id)
             msg.append('Use force=true argument to delete all duplicates')
             output['msg'] = msg
             return output
@@ -119,17 +125,63 @@ class AgentAPI(object):
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def add(self, **kwargs):
+    def delete_index(self, **kwargs):
         cherrypy.log(str(kwargs))
         output = {'success': False}
-        record = kwargs.get('record')
-        if record is None:
-            msg = "Error: 'record' argument is required"
-            output['msg'] = msg
-            return output
         index = kwargs.get('index')
         if index is None:
             msg = "Error: 'index' argument is required"
+            output['msg'] = msg
+            return output
+        idx = Index(index)
+        if not idx.exists():
+            msg = "Error: index {} does not exist".format(index)
+            output['msg'] = msg
+            return output
+
+        try:
+            idx.delete()
+        except Exception as e:
+            msg = "Error: delete index failed: resean {}".format(e)
+            output['msg'] = msg
+            return output
+
+        output['success'] = True
+        return output
+
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def add(self, **kwargs):
+        cherrypy.log(str(kwargs))
+        output = {'success': False}
+        index = kwargs.get('index')
+        if index is None:
+            msg = "Error: 'index' argument is required"
+            output['msg'] = msg
+            return output
+        collection = kwargs.get('collection')
+        if collection is None:
+            msg = "Error: 'collection' argument is required"
+            output['msg'] = msg
+            return output
+        infrastructures = kwargs.get('infrastructures', [])
+        # if infrastructures is None:
+        #     msg = "Error: 'infrastructures' argument is required"
+        #     output['msg'] = msg
+        #     return output
+        metadata_json = kwargs.get('metadata_json')
+        if metadata_json is None:
+            msg = "Error: 'metadata_json' argument is required"
+            output['msg'] = msg
+            return output
+        organization = kwargs.get('organization')
+        if organization is None:
+            msg = "Error: 'organization' argument is required"
+            output['msg'] = msg
+            return output
+        record_id = kwargs.get('record_id')
+        if record_id is None:
+            msg = "Error: 'record_id' argument is required"
             output['msg'] = msg
             return output
         if not index_exists(index):
@@ -138,25 +190,21 @@ class AgentAPI(object):
             return output
 
         try:
-            record = json.loads(record)
+            metadata_json = json.loads(metadata_json)
         except Exception as e:
             msg = "Error: json format {}".format(e)
             output['msg'] = msg
             return output
 
-        validation = validate_metadata_record(record)
+        validation = validate_metadata_record(metadata_json)
         if not validation['success']:
             output['msg'] = validation['msg']
             return output
 
-        identifier = record['metadata_json']['identifier']['identifier']
-
-        set_spec = kwargs.get('set_spec', '')
-
         # print(geoLocations)
         # Replace record if it already exists ie. delete first
         srch = Metadata.search(index=index)
-        srch = srch.filter('match', record_id=identifier)
+        srch = srch.filter('match', record_id=record_id)
         srch.execute()
         exists = False
         if srch.count() == 1:
@@ -166,7 +214,12 @@ class AgentAPI(object):
         Metadata.init(index=index)
         try:
             md = Metadata(
-                record=record, record_id=identifier, set_spec=set_spec)
+                collection=collection,
+                infrastructures=infrastructures,
+                organization=organization,
+                record_id=record_id,
+                metadata_json=metadata_json,
+            )
             md.meta.index = index
         except Exception as e:
             msg = "Error: {}: {}".format('Creation failed', e)
@@ -175,9 +228,14 @@ class AgentAPI(object):
 
         try:
             md.save()
+        except AttributeError as e:
+            msg = "{}: {} - {}".format(
+                'Save failed', e.args, record_id)
+            output['msg'] = msg
+            return output
         except Exception as e:
             msg = "Error: {}: {} - {}".format(
-                'Save failed', identifier, e.info)
+                'Save failed', record_id, e.info)
             output['msg'] = msg
             return output
 
@@ -279,7 +337,7 @@ class AgentAPI(object):
             output['error'] = response['error']
             return output
 
-        items = format_json_dates(response['result'])
+        items = format_metadata(response['result'])
 
         output['success'] = True
         output['result_length'] = len(items)
@@ -385,7 +443,7 @@ class AgentAPI(object):
         api = ET.SubElement(body, "h3")
         api.text = 'JSON API'
 
-        # Create
+        # Createa Index
         child = ET.SubElement(api, "br")
         child = ET.SubElement(api, "br")
         add = ET.SubElement(api, "a", {
@@ -408,6 +466,26 @@ class AgentAPI(object):
         child = ET.SubElement(api, "span", {
             'style': 'font-size: 12'})
         child.text = '* record: a template records used to define the metadata structure'
+
+        # Delete Index
+        child = ET.SubElement(api, "br")
+        child = ET.SubElement(api, "br")
+        add = ET.SubElement(api, "a", {
+            'href': '{}/delete_index'.format(url)
+        })
+        add.text = 'Delete Index'
+        child = ET.SubElement(api, "br")
+        child = ET.SubElement(api, "span", {
+            'style': 'font-size: 12'})
+        child.text = "Delete an index"
+        child = ET.SubElement(api, "br")
+        child = ET.SubElement(api, "span", {
+            'style': 'font-size: 12'})
+        child.text = 'Arguments:'
+        child = ET.SubElement(api, "br")
+        child = ET.SubElement(api, "span", {
+            'style': 'font-size: 12'})
+        child.text = '* index: name of indexto be deleted'
 
         # Search
         ET.SubElement(api, "br")

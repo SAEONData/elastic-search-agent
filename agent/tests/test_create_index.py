@@ -7,7 +7,7 @@ from agent.config import server_url
 def create_new_index():
 
     data = {
-        'record': json.dumps(JSON_DICT),
+        'metadata_json': json.dumps(JSON_DICT['metadata_json']),
         'index': metadata_index_name,
     }
     response = requests.post(
@@ -25,7 +25,7 @@ def create_new_index():
 JSON_DICT = {
     'organization': 'WebTide',
     'collection': '1000',
-    'infrustructures': ['SASDI', 'SANSA'],
+    'infrastructures': ['SASDI', 'SANSA'],
     'metadata_json': {
         'additionalFields': {
             'coverageBegin': '',
@@ -41,7 +41,6 @@ JSON_DICT = {
         'alternateIdentifiers': [{
             'alternateIdentifier': 'http://schema.datacite.org/schema/meta/kernel-3.1/example/datacite-example-full-v3.1.xml',
             'alternateIdentifierType': 'URL'}],
-        'bounds': [-68.302, 30.233, -66.302, 32.233000000000004],
         'contributors': [{
             'affiliation': 'California Digital Library',
             'contributorName': 'Starr, Joan',

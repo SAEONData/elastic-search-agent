@@ -60,6 +60,17 @@ def request_list_records(token=None):
     return response.text
 
 
+def request_get_record(identifier):
+    url = "{}/oaipmh?verb=GetRecord&identifier={}&metadataPrefix=oai_dc".format(
+        server_url, identifier)
+    response = requests.get(url=url)
+    if response.status_code != 200:
+        raise RuntimeError('Request failed with return code: %s' % (
+            response.status_code))
+
+    return response.text
+
+
 def list_identifiers():
     text = request_list_identifiers()
 
@@ -174,8 +185,26 @@ def list_records():
         print('list_records: Page {} complete'.format(loop))
 
 
+def get_record(identifier):
+    text = request_get_record(identifier)
+
+    try:
+        root = ET.fromstring(text)
+    except Exception:
+        raise RuntimeError('Response text is not valid XML')
+
+    record_el = root.find(
+        '{http://www.openarchives.org/OAI/2.0/}GetRecord')
+    records = record_el.getchildren()
+    if len(records) == 0:
+        print('not record found with identifier {}'.format(identifier))
+
+    print('get_record found {} record'.format(len(records)))
+
+
 if __name__ == "__main__":
     list_identifiers_bad_verb()
     list_identifiers_bad_arg()
     list_identifiers()
     list_records()
+    get_record('12345/ABC')
