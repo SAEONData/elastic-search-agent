@@ -485,7 +485,7 @@ class AgentAPI(object):
         child = ET.SubElement(api, "br")
         child = ET.SubElement(api, "span", {
             'style': 'font-size: 12'})
-        child.text = '* index: name of indexto be deleted'
+        child.text = '* index: name of index to be deleted'
 
         # Search
         ET.SubElement(api, "br")
@@ -505,7 +505,7 @@ class AgentAPI(object):
         child = ET.SubElement(api, "br")
         child = ET.SubElement(api, "span", {
             'style': 'font-size: 12'})
-        child.text = '* index: the name of the index to be searched'
+        child.text = '* index: the name of the index to be searched (default is md_index_1)'
         child = ET.SubElement(api, "br")
         child = ET.SubElement(api, "span", {
             'style': 'font-size: 12'})
@@ -568,7 +568,7 @@ class AgentAPI(object):
         child = ET.SubElement(api, "br")
         child = ET.SubElement(api, "span", {
             'style': 'font-size: 12'})
-        child.text = '* index: where the new records will be added'
+        child.text = '* index: where the new records will be added (default is md_index_1)'
         child = ET.SubElement(api, "br")
         child = ET.SubElement(api, "span", {
             'style': 'font-size: 12'})
@@ -596,7 +596,7 @@ class AgentAPI(object):
         child = ET.SubElement(api, "br")
         child = ET.SubElement(api, "span", {
             'style': 'font-size: 12'})
-        child.text = '* index: the index from which records will be deleted'
+        child.text = '* index: the index from which records will be deleted (default is md_index_1)'
         child = ET.SubElement(api, "br")
         child = ET.SubElement(api, "span", {
             'style': 'font-size: 12'})
@@ -621,7 +621,7 @@ class AgentAPI(object):
         child = ET.SubElement(api, "br")
         child = ET.SubElement(api, "span", {
             'style': 'font-size: 12'})
-        child.text = '* index: the name of the index to be searched'
+        child.text = '* index: the name of the index to be searched (default is md_index_1)'
         child = ET.SubElement(api, "br")
         child = ET.SubElement(api, "span", {
             'style': 'font-size: 12'})
