@@ -7,7 +7,8 @@ import time
 import xml.etree.ElementTree as ET
 from agent.config import server_port
 from agent.config import token_index_name
-from agent.oaipmh import process_request
+from agent.csw import process_request as process_csw_request
+from agent.oaipmh import process_request as process_oai_request
 from agent.persist import Metadata
 from agent.search import MetadataSearch
 from agent.search import search_all
@@ -420,7 +421,21 @@ class AgentAPI(object):
         request = cherrypy.request
         cherrypy.log('oaipmh')
 
-        response = process_request(
+        response = process_oai_request(
+            request, request.query_string, **kwargs)
+
+        # prepare return on XML
+        cherrypy.response.headers['Content-Type'] = \
+            'application/xml;charset=UTF-8'
+        cherrypy.response.headers['Content-Length'] = len(response)
+        return response
+
+    @cherrypy.expose
+    def csw(self, **kwargs):
+        request = cherrypy.request
+        cherrypy.log('csw')
+
+        response = process_csw_request(
             request, request.query_string, **kwargs)
 
         # prepare return on XML
