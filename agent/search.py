@@ -204,7 +204,7 @@ def search(index, **kwargs):
             qry['filter'] = {'bool': {'should': filters}}
 
     qry = {'bool': qry}
-    print('Search Query {}'.format(qry))
+    logger.info('Search Query {}'.format(qry))
     srch.query = qry
 
     try:
