@@ -66,17 +66,6 @@ def validate_metadata_record(record):
     logger.debug(lst)
     record['dates'] = lst
 
-    # Hack to fix geoLocations
-    geoLocations = record.get('geoLocations')
-    if geoLocations:
-        for geoLocation in geoLocations:
-            if geoLocation.get('geoLocationPoint'):
-                geoLocation['geoLocationPoint'] = \
-                    format_geo_point(geoLocation['geoLocationPoint'])
-            if geoLocation.get('geoLocationBox'):
-                geoLocation['geoLocationBox'] = \
-                    format_geo_box(geoLocation['geoLocationBox'])
-
     output['success'] = True
     return output
 

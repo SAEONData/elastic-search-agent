@@ -1,13 +1,15 @@
 import requests
+import sys
 from agent.config import metadata_index_name
 from agent.config import server_url
 
 
-def delete_new_index():
+def delete_new_index(index_name=metadata_index_name):
 
     data = {
-        'index': metadata_index_name,
+        'index': index_name,
     }
+    print('delete {}.'.format(index_name))
     response = requests.post(
         url="{}/delete_index".format(server_url),
         params=data
@@ -21,4 +23,8 @@ def delete_new_index():
 
 
 if __name__ == "__main__":
-    delete_new_index()
+    args = sys.argv[1:]
+    if args:
+        delete_new_index(args[0])
+    else:
+        delete_new_index()

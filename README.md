@@ -34,10 +34,10 @@ on your system, you might need to set `START_DAEMON=true` in /etc/default/elasti
 
 ### JSON API
 #### create_index
-Add an index we records will be stored
+Add an index where records will be stored
 ##### Arguments:
 * index: where the new records will be stored
-* record: a template records used to define the metadata structure
+* metadata_json: a template records used to define the metadata structure
 
 #### delete_index
 Delete an exiting index
@@ -63,8 +63,11 @@ Return selected records in a 'SAEON JSON DataCite' format
 Add a record to a collection
 ##### Arguments:
 * index: where the new records will be stored
-* record: json dict in 'SAEON JSON DataCite' format
-* spec_set: optional name of collection
+* record_id: unique ID of the record
+* metadata_json: json dict in 'SAEON JSON DataCite' format
+* collection: optional collection name
+* organization: optional name of organization
+* infrastructures: optional list of infrastructures
 
 #### delete
 Delete a given record

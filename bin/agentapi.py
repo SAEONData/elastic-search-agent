@@ -465,7 +465,7 @@ class AgentAPI(object):
         child = ET.SubElement(api, "br")
         child = ET.SubElement(api, "span", {
             'style': 'font-size: 12'})
-        child.text = '* record: a template records used to define the metadata structure'
+        child.text = '* metadata_json: a template records used to define the metadata structure'
 
         # Delete Index
         child = ET.SubElement(api, "br")
@@ -572,11 +572,21 @@ class AgentAPI(object):
         child = ET.SubElement(api, "br")
         child = ET.SubElement(api, "span", {
             'style': 'font-size: 12'})
-        child.text = "* record: json dict in 'SAEON JSON DataCite' format"
+        child.text = "* record_id: unique ID of the record"
+
         child = ET.SubElement(api, "br")
         child = ET.SubElement(api, "span", {
             'style': 'font-size: 12'})
-        child.text = "* spec_set: optional name of collection"
+        child.text = "* metadata_json: json dict in 'SAEON JSON DataCite' format"
+        child = ET.SubElement(api, "br")
+        child = ET.SubElement(api, "span", {
+            'style': 'font-size: 12'})
+        child.text = "* organization: optional name of organization"
+
+        child = ET.SubElement(api, "br")
+        child = ET.SubElement(api, "span", {
+            'style': 'font-size: 12'})
+        child.text = "* infrastructures: optional list of infrastructures"
 
         # Delete
         child = ET.SubElement(api, "br")
