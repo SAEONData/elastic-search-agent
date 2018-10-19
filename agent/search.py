@@ -189,6 +189,7 @@ def search(index, **kwargs):
             msg = 'Coordinate values {} are malformed'.format(coords)
             output['error'] = msg
             return output
+        logger.info('Geo Search: {}'.format(afilter))
 
     # Add Query
     if len(q_list) == 0:
@@ -243,7 +244,7 @@ def search(index, **kwargs):
         output['success'] = True
     except TransportError as e:
         if e.error == 'search_phase_execution_exception':
-            msg = 'Sort field {} is not allowed'.format(sort_field_name)
+            msg = 'Search phrase error {}'.format(e)
         else:
             msg = 'Search Engine Transport error: {}'.format(e)
         output['error'] = msg

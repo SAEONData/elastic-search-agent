@@ -9,22 +9,47 @@ logger = logging.getLogger(__name__)
 
 
 def format_geo_point(point):
-    results = point.split(' ')
-    results = [i for i in filter(('').__ne__, results)]
-    results = ','.join(results)
-    return results
+    if not point.get('pointLatitude') or not point.get('pointLongitude'):
+        return None
+    return ','.join(
+        [point.get('pointLatitude'), point.get('pointLongitude')])
 
 
 def format_geo_box(box):
-    results = box.split(' ')
-    results = [float(i) for i in filter(('').__ne__, results)]
+    if not box.get('northBoundLatitude') or \
+       not box.get('eastBoundLongitude') or \
+       not box.get('southBoundLatitude') or \
+       not box.get('westBoundLongitude'):
+        return None
     coords = "(({} {}, {} {}, {} {}, {} {}, {} {}))".format(
-        results[2], results[1],
-        results[0], results[1],
-        results[0], results[3],
-        results[2], results[3],
-        results[2], results[1])
+        box['southBoundLatitude'], box['westBoundLongitude'],
+        box['southBoundLatitude'], box['eastBoundLongitude'],
+        box['northBoundLatitude'], box['eastBoundLongitude'],
+        box['northBoundLatitude'], box['westBoundLongitude'],
+        box['southBoundLatitude'], box['westBoundLongitude'])
     results = 'POLYGON {}'.format(coords)
+    # print('format_geo_box: {}'.format(results))
+    return results
+
+
+def format_geo_polygons(polygons):
+    results = []
+
+    for polygon in polygons:
+        if not polygon.get('polygonPoints'):
+            continue
+        coords = "(({} {}, {} {}, {} {}, {} {}, {} {}))".format(
+            polygon['polygonPoints'][0]['pointLatitude'],
+            polygon['polygonPoints'][0]['pointLongitude'],
+            polygon['polygonPoints'][1]['pointLatitude'],
+            polygon['polygonPoints'][1]['pointLongitude'],
+            polygon['polygonPoints'][2]['pointLatitude'],
+            polygon['polygonPoints'][2]['pointLongitude'],
+            polygon['polygonPoints'][3]['pointLatitude'],
+            polygon['polygonPoints'][3]['pointLongitude'],
+            polygon['polygonPoints'][4]['pointLatitude'],
+            polygon['polygonPoints'][4]['pointLongitude'])
+        results.append('POLYGON {}'.format(coords))
     # print('format_geo_box: {}'.format(results))
     return results
 
@@ -42,13 +67,18 @@ def validate_metadata_record(record):
         msg = "identifier is required"
         output['msg'] = msg
         return output
+    output['success'] = True
+    return output
 
-    # Hack to fix rights
+
+def transpose_metadata_record(record):
+    output = {'success': False}
+    # Transpose rights from datacite to ES
     rights = record.get('rights')
     if rights == '':
         record['rights'] = []
 
-    # Hack to fix dates
+    # Transpose dates from datacite to ES
     dates = record.get('dates')
     lst = []
     for date_dict in dates:
@@ -65,6 +95,20 @@ def validate_metadata_record(record):
             lst.append(new)
     logger.debug(lst)
     record['dates'] = lst
+
+    # Transpose geoLocations from datacite to ES
+    geoLocations = record.get('geoLocations')
+    if geoLocations:
+        for geoLocation in geoLocations:
+            if geoLocation.get('geoLocationPoint'):
+                geoLocation['geoLocationPoint'] = \
+                    format_geo_point(geoLocation['geoLocationPoint'])
+            if geoLocation.get('geoLocationBox'):
+                geoLocation['geoLocationBox'] = \
+                    format_geo_box(geoLocation['geoLocationBox'])
+            if geoLocation.get('geoLocationPolygons'):
+                geoLocation['geoLocationPolygons'] = \
+                    format_geo_polygons(geoLocation['geoLocationPolygons'])
 
     output['success'] = True
     return output

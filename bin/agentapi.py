@@ -16,6 +16,7 @@ from agent.utils import index_exists
 from agent.utils import get_request_host
 from agent.utils import json_handler
 from agent.utils import format_metadata
+from agent.utils import transpose_metadata_record
 from agent.utils import validate_metadata_record
 from elasticsearch_dsl import Index
 from elasticsearch_dsl import Search
@@ -73,6 +74,11 @@ class AgentAPI(object):
 
         validation = validate_metadata_record(metadata_json)
         if not validation['success']:
+            output['msg'] = validation['msg']
+            return output
+
+        transposed = transpose_metadata_record(metadata_json)
+        if not transposed['success']:
             output['msg'] = validation['msg']
             return output
 
@@ -198,6 +204,11 @@ class AgentAPI(object):
 
         validation = validate_metadata_record(metadata_json)
         if not validation['success']:
+            output['msg'] = validation['msg']
+            return output
+
+        transposed = transpose_metadata_record(metadata_json)
+        if not transposed['success']:
             output['msg'] = validation['msg']
             return output
 

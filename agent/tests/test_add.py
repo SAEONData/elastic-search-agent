@@ -48,7 +48,7 @@ JSON_DICTS = [{
     'infrastructures': ['SASDI', 'SANSA'],
     'metadata_json': {
         "identifier": {
-            "identifier": "10.5072/example-full",
+            "identifier": "12.02010/example-full",
             "identifierType": "DOI"
         },
         "creators": [
@@ -173,8 +173,8 @@ JSON_DICTS = [{
             {
                 "geoLocationPlace": "Atlantic Ocean",
                 "geoLocationPoint": {
-                    "pointLongitude": "-67.302",
-                    "pointLatitude": "31.233"
+                    "pointLongitude": "-69.302",
+                    "pointLatitude": "41.533"
                 },
                 "geoLocationBox": {
                     "westBoundLongitude": "-71.032",
@@ -236,7 +236,7 @@ JSON_DICTS = [{
         ],
         "originalMetadata": "<?xml version=\"1.0\"?><resource>...the original metadata...</resource>"
     }
-},{
+}, {
     'record_id': '1002',
     'organization': 'WebTide',
     'collection': '1000',
@@ -248,10 +248,10 @@ JSON_DICTS = [{
         },
         "creators": [
             {
-                "creatorName": "Miller, Elizabeth",
+                "creatorName": "Jones, Jane",
                 "nameType": "Personal",
-                "givenName": "Elizabeth",
-                "familyName": "Miller",
+                "givenName": "Jane",
+                "familyName": "Jones",
                 "nameIdentifiers": [
                     {
                         "nameIdentifier": "0000-0001-5000-0007",
@@ -306,12 +306,12 @@ JSON_DICTS = [{
         ],
         "dates": [
             {
-                "date": "2017-09-13",
+                "date": "2017-01-13",
                 "dateType": "Updated",
                 "dateInformation": "Updated with 4.1 properties"
             },
             {
-                "date": "2018-09-21",
+                "date": "2018-01-21",
                 "dateType": "Collected"
             }
         ],
@@ -368,37 +368,37 @@ JSON_DICTS = [{
             {
                 "geoLocationPlace": "Atlantic Ocean",
                 "geoLocationPoint": {
-                    "pointLongitude": "-67.302",
-                    "pointLatitude": "31.233"
+                    "pointLongitude": "67.302",
+                    "pointLatitude": "-31.233"
                 },
                 "geoLocationBox": {
-                    "westBoundLongitude": "-71.032",
-                    "eastBoundLongitude": "-68.211",
-                    "southBoundLatitude": "41.090",
-                    "northBoundLatitude": "42.893"
+                    "westBoundLongitude": "71.032",
+                    "eastBoundLongitude": "68.211",
+                    "southBoundLatitude": "-41.090",
+                    "northBoundLatitude": "-42.893"
                 },
                 "geoLocationPolygons": [
                     {
                         "polygonPoints": [
                             {
-                                "pointLatitude": "41.991",
-                                "pointLongitude": "-71.032"
+                                "pointLatitude": "-41.991",
+                                "pointLongitude": "71.032"
                             },
                             {
-                                "pointLatitude": "42.893",
-                                "pointLongitude": "-69.622"
+                                "pointLatitude": "-42.893",
+                                "pointLongitude": "69.622"
                             },
                             {
-                                "pointLatitude": "41.991",
-                                "pointLongitude": "-68.211"
+                                "pointLatitude": "-41.991",
+                                "pointLongitude": "68.211"
                             },
                             {
-                                "pointLatitude": "41.090",
-                                "pointLongitude": "-69.622"
+                                "pointLatitude": "-41.090",
+                                "pointLongitude": "69.622"
                             },
                             {
-                                "pointLatitude": "41.991",
-                                "pointLongitude": "-71.032"
+                                "pointLatitude": "-41.991",
+                                "pointLongitude": "71.032"
                             }
                         ]
                     }
