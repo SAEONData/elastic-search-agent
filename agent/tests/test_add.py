@@ -48,7 +48,7 @@ JSON_DICTS = [{
     'infrastructures': ['SASDI', 'SANSA'],
     'metadata_json': {
         "identifier": {
-            "identifier": "12.02010/example-full",
+            "identifier": "12.02010",
             "identifierType": "DOI"
         },
         "creators": [
@@ -243,7 +243,7 @@ JSON_DICTS = [{
     'infrastructures': ['SASDI', 'SANSA'],
     'metadata_json': {
         "identifier": {
-            "identifier": "10.5072/example-full",
+            "identifier": "10.5072",
             "identifierType": "DOI"
         },
         "creators": [
@@ -268,10 +268,10 @@ JSON_DICTS = [{
         ],
         "titles": [
             {
-                "title": "Full DataCite XML Example"
+                "title": "Second Full DataCite XML Example"
             },
             {
-                "title": "Demonstration of DataCite Properties.",
+                "title": "Second Demo of DataCite Properties.",
                 "titleType": "Subtitle"
             }
         ],
