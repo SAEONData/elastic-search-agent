@@ -32,12 +32,16 @@ def add_metadata_records(repeats=1):
         for data in JSON_DICTS:
             cnt += 1
             # print('Add record {}'.format(cnt))
+            data['metadata_json']['identifier']['identifier'] = \
+                '{}.{}'.format(
+                    data['metadata_json']['identifier']['identifier'],
+                    cnt)
             add_a_metadata_record(
                 collection=data['collection'],
                 infrastructures=data['infrastructures'],
                 metadata_json=data['metadata_json'],
                 organization=data['organization'],
-                record_id=data['record_id'],
+                record_id='{}.{}'.format(data['record_id'], cnt),
             )
 
 
@@ -171,39 +175,39 @@ JSON_DICTS = [{
         ],
         "geoLocations": [
             {
-                "geoLocationPlace": "Atlantic Ocean",
+                "geoLocationPlace": "Muizenberg",
                 "geoLocationPoint": {
-                    "pointLongitude": "-69.302",
-                    "pointLatitude": "41.533"
+                    "pointLongitude": "18.45",
+                    "pointLatitude": "-34.055"
                 },
                 "geoLocationBox": {
-                    "westBoundLongitude": "-71.032",
-                    "eastBoundLongitude": "-68.211",
-                    "southBoundLatitude": "41.090",
-                    "northBoundLatitude": "42.893"
+                    "westBoundLongitude": "18.45",
+                    "eastBoundLongitude": "18.5",
+                    "southBoundLatitude": "-34.15",
+                    "northBoundLatitude": "-34.055"
                 },
                 "geoLocationPolygons": [
                     {
                         "polygonPoints": [
                             {
-                                "pointLatitude": "41.991",
-                                "pointLongitude": "-71.032"
+                                "pointLatitude": "-34.055",
+                                "pointLongitude": "18.45"
                             },
                             {
-                                "pointLatitude": "42.893",
-                                "pointLongitude": "-69.622"
+                                "pointLatitude": "-34.15",
+                                "pointLongitude": "18.45"
                             },
                             {
-                                "pointLatitude": "41.991",
-                                "pointLongitude": "-68.211"
+                                "pointLatitude": "-34.15",
+                                "pointLongitude": "18.5"
                             },
                             {
-                                "pointLatitude": "41.090",
-                                "pointLongitude": "-69.622"
+                                "pointLatitude": "-34.055",
+                                "pointLongitude": "18.5"
                             },
                             {
-                                "pointLatitude": "41.991",
-                                "pointLongitude": "-71.032"
+                                "pointLatitude": "-34.055",
+                                "pointLongitude": "18.45"
                             }
                         ]
                     }
@@ -279,7 +283,7 @@ JSON_DICTS = [{
         "publicationYear": "2014",
         "subjects": [
             {
-                "subject": "000 computer science",
+                "subject": "101 computer science",
                 "subjectScheme": "dewey",
                 "schemeURI": "http://dewey.info/"
             }
@@ -366,39 +370,39 @@ JSON_DICTS = [{
         ],
         "geoLocations": [
             {
-                "geoLocationPlace": "Atlantic Ocean",
+                "geoLocationPlace": "Muizenberg",
                 "geoLocationPoint": {
-                    "pointLongitude": "67.302",
-                    "pointLatitude": "-31.233"
+                    "pointLongitude": "18.45",
+                    "pointLatitude": "-34.055"
                 },
                 "geoLocationBox": {
-                    "westBoundLongitude": "71.032",
-                    "eastBoundLongitude": "68.211",
-                    "southBoundLatitude": "-41.090",
-                    "northBoundLatitude": "-42.893"
+                    "westBoundLongitude": "18.45",
+                    "eastBoundLongitude": "18.5",
+                    "southBoundLatitude": "-34.15",
+                    "northBoundLatitude": "-34.055"
                 },
                 "geoLocationPolygons": [
                     {
                         "polygonPoints": [
                             {
-                                "pointLatitude": "-41.991",
-                                "pointLongitude": "71.032"
+                                "pointLatitude": "-34.055",
+                                "pointLongitude": "18.45"
                             },
                             {
-                                "pointLatitude": "-42.893",
-                                "pointLongitude": "69.622"
+                                "pointLatitude": "-34.15",
+                                "pointLongitude": "18.45"
                             },
                             {
-                                "pointLatitude": "-41.991",
-                                "pointLongitude": "68.211"
+                                "pointLatitude": "-34.15",
+                                "pointLongitude": "18.5"
                             },
                             {
-                                "pointLatitude": "-41.090",
-                                "pointLongitude": "69.622"
+                                "pointLatitude": "-34.055",
+                                "pointLongitude": "18.5"
                             },
                             {
-                                "pointLatitude": "-41.991",
-                                "pointLongitude": "71.032"
+                                "pointLatitude": "-34.055",
+                                "pointLongitude": "18.45"
                             }
                         ]
                     }
@@ -435,4 +439,4 @@ JSON_DICTS = [{
 ]
 
 if __name__ == "__main__":
-    add_metadata_records()
+    add_metadata_records(repeats=1)

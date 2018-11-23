@@ -24,6 +24,7 @@ def search(index, **kwargs):
     logger.info('search in index {}'.format(index))
     source_fields = ''
     sort_field = None
+    sort_order = 'asc'
     from_date = None
     to_date = None
     date_type = None
@@ -48,6 +49,9 @@ def search(index, **kwargs):
             continue
         elif key == 'sort':
             sort_field = kwargs[key]
+            continue
+        elif key == 'sortorder':
+            sort_order = kwargs[key].lower() == 'desc' and 'desc' or 'asc'
             continue
         elif key == 'from':
             from_date = kwargs[key]
@@ -86,13 +90,11 @@ def search(index, **kwargs):
 
     if sort_field:
         logger.debug('Sort on {}'.format(sort_field))
+        sort_field_name = sort_field
         if sort_field.startswith('-'):
-            sort_field = sort_field[1:]
-            sort_field_name = sort_field
-            sort_field = {sort_field_name: {'order': 'desc'}}
-        else:
-            sort_field_name = sort_field
-            sort_field = {sort_field_name: {'order': 'asc'}}
+            sort_order = 'desc'
+            sort_field = sort_field_name = sort_field[1:]
+        sort_field = {sort_field: {'order': sort_order}}
 
         field_type = mapping.resolve_field(sort_field_name)
         if field_type is None:

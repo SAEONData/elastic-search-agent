@@ -53,6 +53,7 @@ Return selected records in a 'SAEON JSON DataCite' format
 * from: from date
 * to: to date
 * sort: sort results by the given field in ascending order
+* sortorder: asc or desc
 * start: position of the first record returned, default is 1
 * size: number of results, default is 100
 * encloses: return objects that lay completely within given rectangle specified as postions top left and bottom right
