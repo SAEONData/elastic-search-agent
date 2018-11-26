@@ -51,7 +51,7 @@ class Metadata(DocType):
                     {
                         "path_match": "metadata_json.subjects.subject",
                         "match_mapping_type": "string",
-                        "mapping": Keyword("not_analyzed")
+                        "mapping": Text(fields={'raw': Keyword()}),
                     }
             },
             {
