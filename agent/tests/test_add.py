@@ -279,8 +279,8 @@ JSON_DICTS = [{
                 "titleType": "Subtitle"
             }
         ],
-        "publisher": "DataCite",
-        "publicationYear": "2014",
+        "publisher": "SAEON",
+        "publicationYear": "2015",
         "subjects": [
             {
                 "subject": "101 computer science",
