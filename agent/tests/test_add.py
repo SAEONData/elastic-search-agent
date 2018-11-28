@@ -370,39 +370,39 @@ JSON_DICTS = [{
         ],
         "geoLocations": [
             {
-                "geoLocationPlace": "Muizenberg",
+                "geoLocationPlace": "Noordhoek",
                 "geoLocationPoint": {
-                    "pointLongitude": "18.45",
-                    "pointLatitude": "-34.055"
+                    "pointLongitude": "18.4",
+                    "pointLatitude": "-34.1"
                 },
                 "geoLocationBox": {
-                    "westBoundLongitude": "18.45",
-                    "eastBoundLongitude": "18.5",
+                    "westBoundLongitude": "18.35",
+                    "eastBoundLongitude": "18.47",
                     "southBoundLatitude": "-34.15",
-                    "northBoundLatitude": "-34.055"
+                    "northBoundLatitude": "-34.05"
                 },
                 "geoLocationPolygons": [
                     {
                         "polygonPoints": [
                             {
-                                "pointLatitude": "-34.055",
-                                "pointLongitude": "18.45"
+                                "pointLatitude": "-34.05",
+                                "pointLongitude": "18.35"
                             },
                             {
                                 "pointLatitude": "-34.15",
-                                "pointLongitude": "18.45"
+                                "pointLongitude": "18.35"
                             },
                             {
                                 "pointLatitude": "-34.15",
-                                "pointLongitude": "18.5"
+                                "pointLongitude": "18.47"
                             },
                             {
-                                "pointLatitude": "-34.055",
-                                "pointLongitude": "18.5"
+                                "pointLatitude": "-34.05",
+                                "pointLongitude": "18.47"
                             },
                             {
-                                "pointLatitude": "-34.055",
-                                "pointLongitude": "18.45"
+                                "pointLatitude": "-34.05",
+                                "pointLongitude": "18.35"
                             }
                         ]
                     }

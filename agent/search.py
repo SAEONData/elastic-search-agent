@@ -74,6 +74,10 @@ def search(index, **kwargs):
             relation = 'intersects'
             coords = kwargs[key]
             continue
+        elif key in 'excludes':
+            relation = 'disjoint'
+            coords = kwargs[key]
+            continue
         # Otherwise add to query
         field_type = mapping.resolve_field(key)
         field_name = '.'.join(key.split('.')[1:])
@@ -191,7 +195,7 @@ def search(index, **kwargs):
             msg = 'Coordinate values {} are malformed'.format(coords)
             output['error'] = msg
             return output
-        logger.info('Geo Search: {}'.format(afilter))
+        print('Geo Search: {}'.format(afilter))
 
     # Add Query
     if len(q_list) == 0:
