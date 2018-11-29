@@ -32,6 +32,7 @@ def search(index, **kwargs):
     afilter = None
     relation = None
     coords = None
+    match = None
 
     start = 1
     size = 100
@@ -62,21 +63,29 @@ def search(index, **kwargs):
         elif key == 'dates.dateType':
             date_type = kwargs[key].lower()
             continue
-        elif key in 'encloses':
+        elif key == 'encloses':
             relation = 'within'
             coords = kwargs[key]
             continue
-        elif key in 'includes':
+        elif key == 'includes':
             relation = 'contains'
             coords = kwargs[key]
             continue
-        elif key in 'overlaps':
+        elif key == 'overlaps':
             relation = 'intersects'
             coords = kwargs[key]
             continue
-        elif key in 'excludes':
+        elif key == 'excludes':
             relation = 'disjoint'
             coords = kwargs[key]
+            continue
+        elif key == 'match':
+            match = kwargs[key]
+            if kwargs[key].lower() not in \
+                    ['must', 'filter', 'should', 'must_not']:
+                msg = 'Unknown match value: {}'.format(kwargs[key])
+                output['error'] = msg
+                return output
             continue
 
         # Otherwise add to query
@@ -93,7 +102,7 @@ def search(index, **kwargs):
             return output
         qry = Q({"match": {key: kwargs[key]}})
         if '*' in kwargs[key]:
-            qry = Q({"wildcard": {key: kwargs[key]}})
+            qry = Q({"wildcard": {key: kwargs[key].lower()}})
         q_list.append(qry)
 
     if sort_field:
@@ -205,7 +214,10 @@ def search(index, **kwargs):
     if len(q_list) == 0:
         q_list = {'match_all': {}}
 
-    qry = {'must': q_list}
+    if match:
+        qry = {match: q_list}
+    else:
+        qry = {'must': q_list}
 
     # Add Filter
     if filters:
