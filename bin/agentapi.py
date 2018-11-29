@@ -520,7 +520,7 @@ class AgentAPI(object):
         child = ET.SubElement(api, "br")
         child = ET.SubElement(api, "span", {
             'style': 'font-size: 12'})
-        child.text = '* field/value pairs: provide any number of fields with the search value'
+        child.text = '* field/value pairs: provide any number of fields with the search value. Use * for wildcard queries'
         child = ET.SubElement(api, "br")
         child = ET.SubElement(api, "span", {
             'style': 'font-size: 12'})
@@ -564,6 +564,11 @@ class AgentAPI(object):
         child = ET.SubElement(api, "span", {
             'style': 'font-size: 12'})
         child.text = '* "includes": return objects that contain the given rectangle specified as postions top left and bottom right'
+
+        child = ET.SubElement(api, "br")
+        child = ET.SubElement(api, "span", {
+            'style': 'font-size: 12'})
+        child.text = '* "excludes": return objects that are outside the given rectangle specified as postions top left and bottom right'
 
         # Add
         child = ET.SubElement(api, "br")

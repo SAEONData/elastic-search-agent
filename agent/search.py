@@ -78,6 +78,7 @@ def search(index, **kwargs):
             relation = 'disjoint'
             coords = kwargs[key]
             continue
+
         # Otherwise add to query
         field_type = mapping.resolve_field(key)
         field_name = '.'.join(key.split('.')[1:])
@@ -90,7 +91,10 @@ def search(index, **kwargs):
             msg = 'Cannot search on field: {}'.format(field_name)
             output['error'] = msg
             return output
-        q_list.append(Q({"match": {key: kwargs[key]}}))
+        qry = Q({"match": {key: kwargs[key]}})
+        if '*' in kwargs[key]:
+            qry = Q({"wildcard": {key: kwargs[key]}})
+        q_list.append(qry)
 
     if sort_field:
         logger.debug('Sort on {}'.format(sort_field))
