@@ -30,20 +30,40 @@ html_strip = analyzer(
 class Metadata(DocType):
     created_at = Date()
     collection = Text()
-    # infrastructures = Nested()
     metadata_json = Object()
     organization = Text()
     record_id = Keyword()
+    anytext = Text()
 
     class Meta:
         using = es_connection
         dynamic_templates = MetaField([
+            # Can't get this to work
+            # https://stackoverflow.com/questions/49740033/elasticsearch-6-copy-to-with-dynamic-index-mappings
+            # {
+            #     "strings":
+            #         {
+            #             "match_mapping_type": "string",
+            #             "mapping": {
+            #                 "type": "text",
+            #                 "copy_all": "anytext"
+            #             }
+            #         }
+            # },
             {
                 "metadata_json":
                     {
                         "path_match": "metadata_json.identifier.identifier",
                         "match_mapping_type": "string",
                         "mapping": Keyword("not_analyzed")
+                    }
+            },
+            {
+                "metadata_json":
+                    {
+                        "path_match": "metadata_json.titles.title",
+                        "match_mapping_type": "string",
+                        "mapping": Text(fields={'raw': Keyword()}),
                     }
             },
             {
@@ -104,8 +124,28 @@ class Metadata(DocType):
             }
         ])
 
+    def _get_anytext(self):
+        result = []
+        anyfields = [
+            'titles.title',
+            'subjects.subject',
+            'descriptions.description',
+        ]
+        for field in anyfields:
+            top = self.metadata_json
+            parts = field.split('.')
+            for idx, val in enumerate(parts):
+                top = getattr(top, val)
+                if not isinstance(top, str):
+                    for item in top:
+                        sub = getattr(item, parts[idx + 1])
+                        result.append(sub)
+                    break
+        return ' '.join(result)
+
     def save(self, **kwargs):
         self.created_at = datetime.now()
+        self.anytext = self._get_anytext()
         return super().save(**kwargs)
 
 

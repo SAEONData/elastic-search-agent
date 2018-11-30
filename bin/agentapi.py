@@ -87,6 +87,7 @@ class AgentAPI(object):
         Metadata.init(index=index)
         try:
             md = Metadata(
+                anytext='dummy',
                 collection='dummy',
                 organization='dummy',
                 infrastructures=['d1'],

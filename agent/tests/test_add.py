@@ -46,6 +46,7 @@ def add_metadata_records(repeats=1):
 
 
 JSON_DICTS = [{
+    'anytext': 'WebTide',
     'record_id': '1001',
     'organization': 'WebTide',
     'collection': '1000',
@@ -241,6 +242,7 @@ JSON_DICTS = [{
         "originalMetadata": "<?xml version=\"1.0\"?><resource>...the original metadata...</resource>"
     }
 }, {
+    'anytext': 'WebTide',
     'record_id': '1002',
     'organization': 'WebTide',
     'collection': '1000',
