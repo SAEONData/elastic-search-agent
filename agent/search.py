@@ -17,6 +17,75 @@ def search_all(index):
     return {'success': True, 'result': srch.scan()}
 
 
+def _create_geo_query(key, val):
+    filters = []
+    if key == 'encloses':
+        relation = 'within'
+    elif key == 'includes':
+        relation = 'contains'
+    elif key == 'overlaps':
+        relation = 'intersects'
+    elif key == 'excludes':
+        relation = 'disjoint'
+    try:
+        coords = val.split(' ')
+        coords = [float(i) for i in coords]
+        afilter = {
+            "geo_shape": {
+                "metadata_json.geoLocations.geoLocationBox": {
+                    "shape": {
+                        "type": "envelope",
+                        "coordinates": [[coords[0], coords[1]], [coords[2], coords[3]]]
+                    },
+                    "relation": relation
+                }
+            }
+        }
+        filters.append(afilter)
+        if relation in ['within', 'intersects']:
+            afilter = {
+                "geo_bounding_box": {
+                    "metadata_json.geoLocations.geoLocationPoint": {
+                        "top_left": {
+                            "lat": coords[0],
+                            "lon": coords[1]
+                        },
+                        "bottom_right": {
+                            "lat": coords[2],
+                            "lon": coords[3]
+                        }
+                    }
+                }
+            }
+            filters.append(afilter)
+    except Exception:
+        msg = 'Coordinate values {} are malformed'.format(coords)
+        return None, msg
+    print('Geo Search: {}'.format(filters))
+    return filters, 'geo-ok'
+
+
+def _create_query(key, val, mapping):
+    if key in ['encloses', 'includes', 'overlaps', 'excludes']:
+        return _create_geo_query(key, val)
+
+    field_type = mapping.resolve_field(key)
+    field_name = '.'.join(key.split('.')[1:])
+    if field_type is None:
+        field_name = '.'.join(key.split('.')[1:])
+        msg = 'Unknown search field: {} {}'.format(key, field_name)
+        return None, msg
+
+    if type(field_type).name in ['object', ]:
+        msg = 'Cannot search on field: {}'.format(field_name)
+        return None, msg
+
+    qry = Q({"match": {key: val}})
+    if '*' in val:
+        qry = Q({"wildcard": {key: val.lower()}})
+    return qry, 'ok'
+
+
 def search(index, **kwargs):
     output = {'success': False}
     mapping = Mapping.from_es(index, 'doc')
@@ -29,7 +98,6 @@ def search(index, **kwargs):
     to_date = None
     date_type = None
     filters = []
-    afilter = None
     relation = None
     coords = None
     match = None
@@ -38,7 +106,6 @@ def search(index, **kwargs):
     size = 100
     q_list = []
     for key in kwargs:
-        logger.debug('------------------------' + key)
         if key == 'fields':
             source_fields = kwargs[key]
             continue
@@ -64,19 +131,19 @@ def search(index, **kwargs):
             date_type = kwargs[key].lower()
             continue
         elif key == 'encloses':
-            relation = 'within'
+            relation = key
             coords = kwargs[key]
             continue
         elif key == 'includes':
-            relation = 'contains'
+            relation = key
             coords = kwargs[key]
             continue
         elif key == 'overlaps':
-            relation = 'intersects'
+            relation = key
             coords = kwargs[key]
             continue
         elif key == 'excludes':
-            relation = 'disjoint'
+            relation = key
             coords = kwargs[key]
             continue
         elif key == 'match':
@@ -87,23 +154,61 @@ def search(index, **kwargs):
                 output['error'] = msg
                 return output
             continue
+        elif key == 'and':
+            params = kwargs[key].split(',')
+            queries = []
+            for param in params:
+                k, v = param.split('=')
+                qry, msg = _create_query(k, v, mapping)
+                if msg == 'geo-ok':
+                    filters.extend(qry)
+                    continue
+                elif msg != 'ok':
+                    output['error'] = msg
+                    return output
+                if not isinstance(qry, list):
+                    qry = [qry]
+                queries.extend(qry)
+            q_list.append(Q({'bool': {'must': queries}}))
+            continue
+        elif key == 'or':
+            params = kwargs[key].split(',')
+            queries = []
+            for param in params:
+                k, v = param.split('=')
+                qry, msg = _create_query(k, v, mapping)
+                if msg != 'ok':
+                    output['error'] = msg
+                    return output
+                if not isinstance(qry, list):
+                    qry = [qry]
+                queries.extend(qry)
+            q_list.append(Q({'bool': {'should': queries}}))
+            continue
+        elif key == 'not':
+            params = kwargs[key].split(',')
+            queries = []
+            for param in params:
+                k, v = param.split('=')
+                qry, msg = _create_query(k, v, mapping)
+                if msg != 'ok':
+                    output['error'] = msg
+                    return output
+                if not isinstance(qry, list):
+                    qry = [qry]
+                queries.extend(qry)
+            q_list.append(Q({'bool': {'must_not': queries}}))
+            continue
 
         # Otherwise add to query
-        field_type = mapping.resolve_field(key)
-        field_name = '.'.join(key.split('.')[1:])
-        if field_type is None:
-            field_name = '.'.join(key.split('.')[1:])
-            msg = 'Unknown search field: {} {}'.format(key, field_name)
+        qry, msg = _create_query(key, kwargs[key], mapping)
+        if msg not in ['geo-ok', 'ok']:
             output['error'] = msg
             return output
-        if type(field_type).name in ['object', ]:
-            msg = 'Cannot search on field: {}'.format(field_name)
-            output['error'] = msg
-            return output
-        qry = Q({"match": {key: kwargs[key]}})
-        if '*' in kwargs[key]:
-            qry = Q({"wildcard": {key: kwargs[key].lower()}})
-        q_list.append(qry)
+
+        if not isinstance(qry, list):
+            qry = [qry]
+        q_list.extend(qry)
 
     if sort_field:
         logger.debug('Sort on {}'.format(sort_field))
@@ -173,42 +278,12 @@ def search(index, **kwargs):
         q_list.append(Q({"match": {'metadata_json.dates.dateType': date_type}}))
 
     if relation:
-        try:
-            coords = coords.split(',')
-            coords = [float(i) for i in coords]
-            afilter = {
-                "geo_shape": {
-                    "metadata_json.geoLocations.geoLocationBox": {
-                        "shape": {
-                            "type": "envelope",
-                            "coordinates": [[coords[0], coords[1]], [coords[2], coords[3]]]
-                        },
-                        "relation": relation
-                    }
-                }
-            }
-            filters.append(afilter)
-            if relation in ['within', 'intersects']:
-                afilter = {
-                    "geo_bounding_box": {
-                        "metadata_json.geoLocations.geoLocationPoint": {
-                            "top_left": {
-                                "lat": coords[0],
-                                "lon": coords[1]
-                            },
-                            "bottom_right": {
-                                "lat": coords[2],
-                                "lon": coords[3]
-                            }
-                        }
-                    }
-                }
-                filters.append(afilter)
-        except Exception as e:
-            msg = 'Coordinate values {} are malformed'.format(coords)
+        afilter, msg = _create_geo_query(relation, coords)
+        if msg != 'geo-ok':
             output['error'] = msg
             return output
-        print('Geo Search: {}'.format(afilter))
+
+        filters.extend(afilter)
 
     # Add Query
     if len(q_list) == 0:
