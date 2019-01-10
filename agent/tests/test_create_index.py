@@ -218,7 +218,23 @@ JSON_DICT = {
                 "resourceDescription": "DataCite metadata schema documentation for the publication and citation of research data"
             }
         ],
-        "originalMetadata": "<?xml version=\"1.0\"?><resource>...the original metadata...</resource>"
+        "originalMetadata": "<?xml version=\"1.0\"?><resource>...the original metadata...</resource>",
+        'additionalFields': {'accessConstraints': 'license',
+                              'characterset': 'http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_CharacterSetCode',
+                              'coverageBegin': '2017-05-02T00:00:00',
+                              'coverageEnd': '2017-07-20T00:00:00',
+                              'onlineResources': [{'desc': 'Data for visualisation',
+                                                   'func': 'Link',
+                                                   'href': 'http://app01.saeon.ac.za:8086/geoserver/BEA/wms?service=WMS&version=1.1.0&request=GetMap&layers=BEA:1_03_NUT&styles=&bbox=16.451920000028533,-34.83416989569374,32.892531746697685,-22.125030000001036&width=512&height=395&srs=EPSG:4326&format=application/openlayers',
+                                                   'name': 'WMS Example',
+                                                   'protocol': 'http'},
+                                                  {'desc': 'Original Metadata Record',
+                                                   'func': 'metadata',
+                                                   'href': 'http://qa.dirisa.org/Institutions/chief-surveyor-general/chief-surveyor-general/metadata/meta153865677354/getOriginalXml',
+                                                   'name': 'Original Metadata Record'}],
+                              'source_uri': 'http://test.sasdi.net/filepath/ArcCatalog10.zip/ArcCatalog10.xml',
+                              'status': 'complete',
+                              'useConstraints': 'license'}
     }
 }
 
