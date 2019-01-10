@@ -2,15 +2,15 @@ import argparse
 from datetime import datetime
 import json
 import requests
-# import time
+import time
 
-IMPORT_TO_CKAN = False
-IMPORT_TO_ES = True
+IMPORT_TO_CKAN = True
+IMPORT_TO_ES = False
 
 # Constants
 # Source config
-# src_base_url = 'http://qa.dirisa.org'
-src_base_url = 'http://oa.dirisa.org'
+src_base_url = 'http://qa.dirisa.org'
+# src_base_url = 'http://oa.dirisa.org'
 # src_base_url = 'http://localhost:8080/SAEON'
 
 # ES destination config
@@ -34,11 +34,12 @@ def get_physical_path(url):
     return '/'.join(url.split('/')[idx:])
 
 
-def add_a_record_to_ckan(collection, metadata_json, organization, record_id, infrastructures):
+def add_a_record_to_ckan(collection, metadata_json, organization, record_id, infrastructures, state):
 
     data = {
         'jsonData': json.dumps(metadata_json),
         'metadataType': 'datacite-4-1',
+        'workflowState': state,
     }
     url = "{}/Institutions/{}/{}-repository/metadata/jsonCreateMetadataAsJson".format(
         ckan_base_url, organization['id'], organization['id'])
@@ -53,12 +54,12 @@ def add_a_record_to_ckan(collection, metadata_json, organization, record_id, inf
             response.status_code))
     result = json.loads(response.text)
     if result['status'] == 'success':
-        uid = result['uid']
-        if IMPORT_TO_CKAN:
-            if check_ckan_added(organization, uid):
-                print('Added Successfully')
-            else:
-                print('Record not found')
+        if check_ckan_added(organization, result):
+            print('Added Successfully')
+        else:
+            print('Record not found')
+        if result['workflow_status'] == 'failed':
+            print('But workflow failed: {}'.format(result['workflow_msg']))
     else:
         print(result)
     return result
@@ -96,8 +97,10 @@ def add_a_record_to_elastic(collection, metadata_json, organization, record_id, 
     return result
 
 
-def check_ckan_added(organization, record_id):
+def check_ckan_added(organization, result):
 
+    # Find the record via jsonContent
+    record_id = result['uid']
     data = {
         'types': 'Metadata',
     }
@@ -114,8 +117,9 @@ def check_ckan_added(organization, record_id):
             response.status_code))
     # print(response.text)
     found = False
-    print(len(json.loads(response.text)))
-    for record in json.loads(response.text):
+    result = json.loads(response.text)
+    print(len(result))
+    for record in result:
         if record['id'] == record_id:
             found = True
     return found
@@ -123,7 +127,7 @@ def check_ckan_added(organization, record_id):
 
 def check_es_added(organization, record_id):
 
-    # time.sleep(1)
+    time.sleep(1)
     data = {
         'record_id': record_id,
         'index': metadata_index_name,
@@ -292,15 +296,16 @@ def import_metadata_records(inst, creds, paths, log_data):
                     organization=inst,
                     infrastructures=['SASDI', 'SANSA'],
                     metadata_json=record['jsonData'],
-                    collection='TestImport',
+                    collection='TestImport2',
                 )
             if IMPORT_TO_CKAN:
                 add_a_record_to_ckan(
                     record_id=record_id,
                     organization=inst,
-                    infrastructures=['SASDI', 'SANSA'],
+                    infrastructures=[],
                     metadata_json=record['jsonData'],
-                    collection='TestImport',
+                    collection='',
+                    state='plone-{}'.format(record.get('status'))
                 )
 
 
