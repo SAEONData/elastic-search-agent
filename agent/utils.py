@@ -9,24 +9,42 @@ logger = logging.getLogger(__name__)
 
 
 def format_geo_point(point):
-    if not point.get('pointLatitude') or not point.get('pointLongitude'):
-        return None
-    return ','.join(
-        [point.get('pointLatitude'), point.get('pointLongitude')])
+    if isinstance(point, dict):
+        if not point.get('pointLatitude') or \
+           not point.get('pointLongitude'):
+            return None
+        return ','.join(
+            [point.get('pointLatitude'), point.get('pointLongitude')])
+    if isinstance(point, dict):
+        if len(point.split(' ')) != 2:
+            return None
+        point = [float(i) for i in point.split(' ')]
+        return '{} {}'.format(point[0], point[1])
 
 
 def format_geo_box(box):
-    if not box.get('northBoundLatitude') or \
-       not box.get('eastBoundLongitude') or \
-       not box.get('southBoundLatitude') or \
-       not box.get('westBoundLongitude'):
-        return None
-    coords = "(({} {}, {} {}, {} {}, {} {}, {} {}))".format(
-        box['southBoundLatitude'], box['westBoundLongitude'],
-        box['southBoundLatitude'], box['eastBoundLongitude'],
-        box['northBoundLatitude'], box['eastBoundLongitude'],
-        box['northBoundLatitude'], box['westBoundLongitude'],
-        box['southBoundLatitude'], box['westBoundLongitude'])
+    if isinstance(box, dict):
+        if not box.get('northBoundLatitude') or \
+           not box.get('eastBoundLongitude') or \
+           not box.get('southBoundLatitude') or \
+           not box.get('westBoundLongitude'):
+            return None
+        coords = "(({} {}, {} {}, {} {}, {} {}, {} {}))".format(
+            box['southBoundLatitude'], box['westBoundLongitude'],
+            box['southBoundLatitude'], box['eastBoundLongitude'],
+            box['northBoundLatitude'], box['eastBoundLongitude'],
+            box['northBoundLatitude'], box['westBoundLongitude'],
+            box['southBoundLatitude'], box['westBoundLongitude'])
+    elif isinstance(box, str):
+        if len(box.split(' ')) != 4:
+            return None
+        box = [float(i) for i in box.split(' ')]
+        coords = "(({} {}, {} {}, {} {}, {} {}, {} {}))".format(
+            box[0], box[1],
+            box[0], box[3],
+            box[2], box[3],
+            box[2], box[1],
+            box[0], box[1])
     results = 'POLYGON {}'.format(coords)
     # print('format_geo_box: {}'.format(results))
     return results
@@ -109,6 +127,30 @@ def transpose_metadata_record(record):
             if geoLocation.get('geoLocationPolygons'):
                 geoLocation['geoLocationPolygons'] = \
                     format_geo_polygons(geoLocation['geoLocationPolygons'])
+
+    # # Hack to clean up description
+    # if record.get('description'):
+    #     record['descriptions'] = record['description']
+    #     del record['description']
+
+    # # Hack to clean up string resourceType
+    # if record.get('resourceType'):
+    #     resourceType = record['resourceType']
+    #     if isinstance(resourceType, str):
+    #         record['resourceType'] = {
+    #             "resourceTypeGeneral": "Software",
+    #             "resourceType": resourceType
+    #         }
+
+    # # Hack to clean up publication year
+    # if len(record.get('publicationYear')) > 4:
+    #     year = record['publicationYear']
+    #     if '-' in year:
+    #         adate = datetime.strptime(year, '%Y-%m-%d')
+    #         record['publicationYear'] = adate.year
+    #     elif '/' in year:
+    #         adate = datetime.strptime(year, '%Y/%m/%d')
+    #         record['publicationYear'] = adate.year
 
     output['success'] = True
     return output
