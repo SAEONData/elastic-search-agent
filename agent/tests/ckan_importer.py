@@ -4,8 +4,8 @@ import json
 import requests
 import time
 
-IMPORT_TO_CKAN = True
-IMPORT_TO_ES = False
+import_to_ckan = True
+import_to_agent = False
 
 # Constants
 # Source config
@@ -14,8 +14,8 @@ src_base_url = 'http://qa.dirisa.org'
 # src_base_url = 'http://localhost:8080/SAEON'
 
 # ES destination config
-es_base_url = 'http://localhost:9210'
-es_user = 'admin'
+agent_base_url = 'http://localhost:9210'
+agent_user = 'admin'
 metadata_index_name = 'md_index_1'
 
 # CKAN destination config
@@ -75,7 +75,7 @@ def add_a_record_to_elastic(collection, metadata_json, organization, record_id, 
         'organization': organization['title'],
         'record_id': record_id,
     }
-    url = "{}/add".format(es_base_url)
+    url = "{}/add".format(agent_base_url)
     response = requests.post(
         url=url,
         params=data,
@@ -87,8 +87,8 @@ def add_a_record_to_elastic(collection, metadata_json, organization, record_id, 
             response.status_code))
     result = json.loads(response.text)
     if result['success']:
-        if IMPORT_TO_ES:
-            if check_es_added(organization, record_id):
+        if import_to_agent:
+            if check_agent_added(organization, record_id):
                 print('Added Successfully')
             else:
                 print('Record not found')
@@ -125,14 +125,14 @@ def check_ckan_added(organization, result):
     return found
 
 
-def check_es_added(organization, record_id):
+def check_agent_added(organization, record_id):
 
     time.sleep(1)
     data = {
         'record_id': record_id,
         'index': metadata_index_name,
     }
-    url = "{}/search".format(es_base_url)
+    url = "{}/search".format(agent_base_url)
     response = requests.get(
         url=url,
         params=data,
@@ -260,7 +260,7 @@ def import_metadata_records(inst, creds, paths, log_data):
             msg = '\n### No records found in {}\n'.format(path)
             log_info(log_data, 'import', msg)
             continue
-        if IMPORT_TO_CKAN:
+        if import_to_ckan:
             response = create_institution(inst)
             if response['status'] == 'failed' and \
                not response['msg']['name'][0].startswith(
@@ -290,7 +290,7 @@ def import_metadata_records(inst, creds, paths, log_data):
                 'action': 'add',
                 'record_id': record_id,
                 'state': record.get('status', 'dunno')})
-            if IMPORT_TO_ES:
+            if import_to_agent:
                 add_a_record_to_elastic(
                     record_id=record_id,
                     organization=inst,
@@ -298,7 +298,7 @@ def import_metadata_records(inst, creds, paths, log_data):
                     metadata_json=record['jsonData'],
                     collection='TestImport2',
                 )
-            if IMPORT_TO_CKAN:
+            if import_to_ckan:
                 add_a_record_to_ckan(
                     record_id=record_id,
                     organization=inst,
@@ -316,6 +316,11 @@ if __name__ == "__main__":
     parser.add_argument("--src-pwd", required=True, help="admin password for source")
     parser.add_argument("--dest-user", required=False, help="user name for destination")
     parser.add_argument("--dest-pwd", required=True, help="admin password for destination")
+    parser.add_argument("--import-to-ckan", required=False, help="import metadata to CKAN")
+    parser.add_argument("--import-to-agent", required=False, help="import metadata to the SAEON Metadata Agent")
+    parser.add_argument("--ckan-base-url", required=False, help="the URL of the CKAN instance")
+    parser.add_argument("--agent-base-url", required=False, help="the URL of the SAEON Metadata Agent")
+
     args = parser.parse_args()
     creds = {
         'src_pwd': args.src_pwd,
@@ -324,6 +329,14 @@ if __name__ == "__main__":
         'dest_user': args.dest_user or 'admin',
     }
     print(creds)
+    if args.import_to_ckan:
+        import_to_ckan = str(args.import_to_ckan).lower() == 'true'
+    print(import_to_ckan)
+
+    if args.import_to_agent:
+        import_to_agent = str(args.import_to_agent).lower() == 'true'
+    print(import_to_agent)
+
     institutions = get_institutions(creds)
     log_data = {}
     for inst in institutions:
