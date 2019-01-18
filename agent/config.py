@@ -10,11 +10,6 @@ es_port = 9200
 metadata_index_name = 'md_index_1'
 token_index_name = 'rt_index_1'
 
-# Importer details
-import_url = 'http://oa.dirisa.org'
-import_user = 'admin'
-import_password = ''
-
 # OAI PMH Repo Identity details
 repositoryName = 'SAEON'
 baseURL = 'http://{}'
