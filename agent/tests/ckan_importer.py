@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 import argparse
 from datetime import datetime
 import json
@@ -47,7 +49,7 @@ def add_a_record_to_ckan(collection, metadata_json, organization, record_id, inf
         url=url,
         params=data,
         auth=requests.auth.HTTPBasicAuth(
-            creds['dest_user'], creds['dest_pwd'])
+            creds['ckan_user'], creds['ckan_pwd'])
     )
     if response.status_code != 200:
         raise RuntimeError('Request failed with return code: %s' % (
@@ -80,7 +82,7 @@ def add_a_record_to_elastic(collection, metadata_json, organization, record_id, 
         url=url,
         params=data,
         auth=requests.auth.HTTPBasicAuth(
-            creds['dest_user'], creds['dest_pwd'])
+            creds['agent_user'], creds['agent_pwd'])
     )
     if response.status_code != 200:
         raise RuntimeError('Request failed with return code: %s' % (
@@ -99,6 +101,7 @@ def add_a_record_to_elastic(collection, metadata_json, organization, record_id, 
 
 def check_ckan_added(organization, result):
 
+    time.sleep(1)
     # Find the record via jsonContent
     record_id = result['uid']
     data = {
@@ -106,15 +109,22 @@ def check_ckan_added(organization, result):
     }
     url = "{}/Institutions/{}/{}-repository/metadata/jsonContent".format(
         ckan_base_url, organization['id'], organization['id'])
-    response = requests.get(
-        url=url,
-        params=data,
-        auth=requests.auth.HTTPBasicAuth(
-            creds['dest_user'], creds['dest_pwd'])
-    )
+    try:
+        response = requests.get(
+            url=url,
+            params=data,
+            auth=requests.auth.HTTPBasicAuth(
+                creds['ckan_user'], creds['ckan_pwd'])
+        )
+    except Exception as e:
+        print(e)
+        return False
+
     if response.status_code != 200:
-        raise RuntimeError('Request failed with return code: %s' % (
-            response.status_code))
+        # raise RuntimeError('Request failed with return code: %s' % (
+        #     response.status_code))
+        return False
+
     # print(response.text)
     found = False
     result = json.loads(response.text)
@@ -137,7 +147,7 @@ def check_agent_added(organization, record_id):
         url=url,
         params=data,
         auth=requests.auth.HTTPBasicAuth(
-            creds['dest_user'], creds['dest_pwd'])
+            creds['agent_user'], creds['agent_pwd'])
     )
     if response.status_code != 200:
         raise RuntimeError('Request failed with return code: %s' % (
@@ -174,11 +184,16 @@ def get_institutions(creds):
 
     url = "{}/Institutions/jsonContent?types=Institution".format(src_base_url)
     # print(url)
-    response = requests.get(
-        url=url,
-        auth=requests.auth.HTTPBasicAuth(
-            creds['src_user'], creds['src_pwd'])
-    )
+    try:
+        response = requests.get(
+            url=url,
+            auth=requests.auth.HTTPBasicAuth(
+                creds['src_user'], creds['src_pwd'])
+        )
+    except Exception as e:
+        print(e)
+        return str(e)
+
     if response.status_code != 200:
         return 'Request failed with return code: %s' % (
             response.status_code)
@@ -209,25 +224,31 @@ def get_metadata_collections(inst, creds, log_data):
         msg = 'Find collections in {} failed -> {}'.format(
             inst['path'], response.status_code)
         log_info(log_data, 'repo', msg)
+        # print('{} => []'.format(url))
         return []
 
     results = json.loads(response.text)
+    if len(results) == 0:
+        # print('{} => []'.format(url))
+        return []
+
     paths = []
     for result in results:
         if result['id'] == 'templates':
             continue
         paths.append(get_physical_path(result['context_path']))
+    # print('{} => {}'.format(url, paths))
     return paths
 
 
 def create_institution(inst):
     url = "{}/Institutions/jsonCreateInstitution?title={}".format(
         ckan_base_url, inst['title'])
-    print(url)
+    # print(url)
     response = requests.post(
         url=url,
         auth=requests.auth.HTTPBasicAuth(
-            creds['dest_user'], creds['dest_pwd'])
+            creds['ckan_user'], creds['ckan_pwd'])
     )
     if response.status_code != 200:
         msg = 'Request failed with return code: %s' % (
@@ -312,30 +333,35 @@ def import_metadata_records(inst, creds, paths, log_data):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
+    parser.add_argument("--src-base-url", required=False, help="the URL for source")
     parser.add_argument("--src-user", required=False, help="user name for source")
     parser.add_argument("--src-pwd", required=True, help="admin password for source")
-    parser.add_argument("--dest-user", required=False, help="user name for destination")
-    parser.add_argument("--dest-pwd", required=True, help="admin password for destination")
     parser.add_argument("--import-to-ckan", required=False, help="import metadata to CKAN")
-    parser.add_argument("--import-to-agent", required=False, help="import metadata to the SAEON Metadata Agent")
     parser.add_argument("--ckan-base-url", required=False, help="the URL of the CKAN instance")
+    parser.add_argument("--ckan-user", required=False, help="user name for ckan")
+    parser.add_argument("--ckan-pwd", required=True, help="admin password for ckan")
+    parser.add_argument("--import-to-agent", required=False, help="import metadata to the SAEON Metadata Agent")
     parser.add_argument("--agent-base-url", required=False, help="the URL of the SAEON Metadata Agent")
+    parser.add_argument("--agent-user", required=False, help="user name for agent")
+    parser.add_argument("--agent-pwd", required=True, help="admin password for agent")
 
     args = parser.parse_args()
     creds = {
-        'src_pwd': args.src_pwd,
-        'dest_pwd': args.dest_pwd,
         'src_user': args.src_user or 'admin',
-        'dest_user': args.dest_user or 'admin',
+        'src_pwd': args.src_pwd,
+        'ckan_user': args.ckan_user or 'admin',
+        'ckan_pwd': args.ckan_pwd,
+        'agent_user': args.agent_user or 'admin',
+        'agent_pwd': args.agent_pwd,
     }
-    print(creds)
+    # print(creds)
     if args.import_to_ckan:
         import_to_ckan = str(args.import_to_ckan).lower() == 'true'
-    print(import_to_ckan)
+    # print(import_to_ckan)
 
     if args.import_to_agent:
         import_to_agent = str(args.import_to_agent).lower() == 'true'
-    print(import_to_agent)
+    # print(import_to_agent)
 
     institutions = get_institutions(creds)
     log_data = {}
