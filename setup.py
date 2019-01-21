@@ -11,8 +11,11 @@ setup(
     packages=['agent'],
     install_requires=[
         'requests',
-        'cherrypy',
+        'cherrypy==14.0.0',
         'elasticsearch_dsl',
+        'cheroot==6.0.0',
+        'tempora==1.10',
+        'elasticsearch_dsl==6.1.0',
     ],
     python_requires='>=3',
 )
