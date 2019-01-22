@@ -149,11 +149,38 @@ class AgentAPI(object):
         try:
             idx.delete()
         except Exception as e:
-            msg = "Error: delete index failed: resean {}".format(e)
+            msg = "Error: delete index failed: reason {}".format(e)
             output['msg'] = msg
             return output
 
         output['success'] = True
+        return output
+
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def index_mapping(self, **kwargs):
+        cherrypy.log(str(kwargs))
+        output = {'success': False}
+        index = kwargs.get('index')
+        if index is None:
+            msg = "Error: 'index' argument is required"
+            output['msg'] = msg
+            return output
+        idx = Index(index)
+        if not idx.exists():
+            msg = "Error: index {} does not exist".format(index)
+            output['msg'] = msg
+            return output
+
+        try:
+            mapping = idx.get_mapping()
+        except Exception as e:
+            msg = "Error: index mapping: reason {}".format(e)
+            output['msg'] = msg
+            return output
+
+        output['success'] = True
+        output['mapping'] = mapping
         return output
 
     @cherrypy.expose
@@ -478,6 +505,26 @@ class AgentAPI(object):
         child = ET.SubElement(api, "span", {
             'style': 'font-size: 12'})
         child.text = '* metadata_json: a template records used to define the metadata structure'
+
+        # Index Mapping
+        child = ET.SubElement(api, "br")
+        child = ET.SubElement(api, "br")
+        add = ET.SubElement(api, "a", {
+            'href': '{}/index_mapping'.format(url)
+        })
+        add.text = 'Index Mapping'
+        child = ET.SubElement(api, "br")
+        child = ET.SubElement(api, "span", {
+            'style': 'font-size: 12'})
+        child.text = "Get the mapping for the given index"
+        child = ET.SubElement(api, "br")
+        child = ET.SubElement(api, "span", {
+            'style': 'font-size: 12'})
+        child.text = 'Arguments:'
+        child = ET.SubElement(api, "br")
+        child = ET.SubElement(api, "span", {
+            'style': 'font-size: 12'})
+        child.text = '* index: name of index'
 
         # Delete Index
         child = ET.SubElement(api, "br")
