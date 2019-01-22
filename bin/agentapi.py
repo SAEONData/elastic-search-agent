@@ -18,6 +18,7 @@ from agent.utils import json_handler
 from agent.utils import format_metadata
 from agent.utils import transpose_metadata_record
 from agent.utils import validate_metadata_record
+from elasticsearch_dsl.connections import connections
 from elasticsearch_dsl import Index
 from elasticsearch_dsl import Search
 
@@ -132,6 +133,28 @@ class AgentAPI(object):
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
+    def get_indexes(self, **kwargs):
+        cherrypy.log(str(kwargs))
+        output = {'success': False}
+        if len(kwargs) != 0:
+            msg = "Error: no arguments is required"
+            output['msg'] = msg
+            return output
+
+        try:
+            es = connections.get_connection()
+            aliases = es.indices.get_alias()
+        except Exception as e:
+            msg = "Error: get_indexes failed: reason {}".format(e)
+            output['msg'] = msg
+            return output
+
+        output['success'] = True
+        output['indexes'] = list(aliases)
+        return output
+
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
     def delete_index(self, **kwargs):
         cherrypy.log(str(kwargs))
         output = {'success': False}
@@ -159,6 +182,7 @@ class AgentAPI(object):
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def index_mapping(self, **kwargs):
+        import pdb; pdb.set_trace()
         cherrypy.log(str(kwargs))
         output = {'success': False}
         index = kwargs.get('index')
@@ -525,6 +549,22 @@ class AgentAPI(object):
         child = ET.SubElement(api, "span", {
             'style': 'font-size: 12'})
         child.text = '* index: name of index'
+
+        # Get Indexes
+        child = ET.SubElement(api, "br")
+        child = ET.SubElement(api, "br")
+        add = ET.SubElement(api, "a", {
+            'href': '{}/get_indexes'.format(url)
+        })
+        add.text = 'Get Indexes'
+        child = ET.SubElement(api, "br")
+        child = ET.SubElement(api, "span", {
+            'style': 'font-size: 12'})
+        child.text = "Get all the indexes"
+        child = ET.SubElement(api, "br")
+        child = ET.SubElement(api, "span", {
+            'style': 'font-size: 12'})
+        child.text = 'Arguments: None'
 
         # Delete Index
         child = ET.SubElement(api, "br")
