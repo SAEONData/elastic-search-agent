@@ -182,7 +182,6 @@ class AgentAPI(object):
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def index_mapping(self, **kwargs):
-        import pdb; pdb.set_trace()
         cherrypy.log(str(kwargs))
         output = {'success': False}
         index = kwargs.get('index')
