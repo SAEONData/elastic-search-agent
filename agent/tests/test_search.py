@@ -16,34 +16,34 @@ TESTS = [
               'from': '2018-06-01'},
      'num_results': 1},
     {'data': {'index': metadata_index_name,
-              'includes': '-34.12,18.46,-34.14,18.49'},
+              'includes': '-34.12 18.46 -34.14 18.49'},
      'num_results': 1},
     {'data': {'index': metadata_index_name,
-              'includes': '-34.08,18.46,-34.08,18.46'},
+              'includes': '-34.08 18.46 -34.08 18.46'},
      'num_results': 2},
     {'data': {'index': metadata_index_name,
-              'includes': '-32,18.46,-34,18.49'},
+              'includes': '-32 18.46 -34 18.49'},
      'num_results': 0},
     {'data': {'index': metadata_index_name,
-              'encloses': '-34,16,-35,19'},
+              'encloses': '-34 16 -35 19'},
      'num_results': 2},
     {'data': {'index': metadata_index_name,
-              'overlaps': '-34,16,-35,19'},
+              'overlaps': '-34 16 -35 19'},
      'num_results': 2},
     {'data': {'index': metadata_index_name,
-              'overlaps': '-34.08,18.4,-34.09,18.41'},
+              'overlaps': '-34.08 18.4 -34.09 18.41'},
      'num_results': 1},
     {'data': {'index': metadata_index_name,
-              'overlaps': '-35.08,18.4,-35.09,18.41'},
+              'overlaps': '-35.08 18.4 -35.09 18.41'},
      'num_results': 0},
     {'data': {'index': metadata_index_name,
-              'excludes': '-34,16,-35,19'},
+              'excludes': '-34 16 -35 19'},
      'num_results': 0},
     {'data': {'index': metadata_index_name,
-              'excludes': '-34.08,18.4,-34.09,18.41'},
+              'excludes': '-34.08 18.4 -34.09 18.41'},
      'num_results': 1},
     {'data': {'index': metadata_index_name,
-              'excludes': '-35.08,18.4,-35.09,18.41'},
+              'excludes': '-35.08 18.4 -35.09 18.41'},
      'num_results': 2},
 ]
 
@@ -76,4 +76,6 @@ if __name__ == "__main__":
     for test in TESTS:
         result = search(test)
         print('{}: {}'.format(result, test['data']))
+        if not result:
+            import pdb; pdb.set_trace()
         print()
