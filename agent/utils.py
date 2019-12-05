@@ -51,25 +51,17 @@ def format_geo_box(box):
 
 
 def format_geo_polygons(polygons):
-    results = []
-
+    polygon_strings = []
     for polygon in polygons:
-        if not polygon.get('polygonPoints'):
+        points = polygon.get('polygonPoints', [])
+        if len(points) < 4 or points[0] != points[-1]:
+            # a valid polygon must have at least 4 points, with the first and last being equal
             continue
-        coords = "(({} {}, {} {}, {} {}, {} {}, {} {}))".format(
-            polygon['polygonPoints'][0]['pointLatitude'],
-            polygon['polygonPoints'][0]['pointLongitude'],
-            polygon['polygonPoints'][1]['pointLatitude'],
-            polygon['polygonPoints'][1]['pointLongitude'],
-            polygon['polygonPoints'][2]['pointLatitude'],
-            polygon['polygonPoints'][2]['pointLongitude'],
-            polygon['polygonPoints'][3]['pointLatitude'],
-            polygon['polygonPoints'][3]['pointLongitude'],
-            polygon['polygonPoints'][4]['pointLatitude'],
-            polygon['polygonPoints'][4]['pointLongitude'])
-        results.append('POLYGON {}'.format(coords))
-    # print('format_geo_box: {}'.format(results))
-    return results
+        point_strings = ['{} {}'.format(point['pointLongitude'], point['pointLatitude']) for point in points]
+        polygon_strings += ['(({}))'.format(', '.join(point_strings))]
+
+    multipolygon_string = 'MULTIPOLYGON ({})'.format(', '.join(polygon_strings))
+    return multipolygon_string
 
 
 def validate_metadata_record(record):
