@@ -24,30 +24,30 @@ def format_geo_point(point):
 
 def format_geo_box(box):
     if isinstance(box, dict):
-        if not box.get('northBoundLatitude') or \
-           not box.get('eastBoundLongitude') or \
-           not box.get('southBoundLatitude') or \
-           not box.get('westBoundLongitude'):
+        west = box.get('westBoundLongitude')
+        east = box.get('eastBoundLongitude')
+        south = box.get('southBoundLatitude')
+        north = box.get('northBoundLatitude')
+        if not west or not east or not south or not north:
             return None
-        coords = "(({} {}, {} {}, {} {}, {} {}, {} {}))".format(
-            box['southBoundLatitude'], box['westBoundLongitude'],
-            box['southBoundLatitude'], box['eastBoundLongitude'],
-            box['northBoundLatitude'], box['eastBoundLongitude'],
-            box['northBoundLatitude'], box['westBoundLongitude'],
-            box['southBoundLatitude'], box['westBoundLongitude'])
     elif isinstance(box, str):
-        if len(box.split(' ')) != 4:
+        box = box.split()
+        if len(box) != 4:
             return None
-        box = [float(i) for i in box.split(' ')]
-        coords = "(({} {}, {} {}, {} {}, {} {}, {} {}))".format(
-            box[0], box[1],
-            box[0], box[3],
-            box[2], box[3],
-            box[2], box[1],
-            box[0], box[1])
-    results = 'POLYGON {}'.format(coords)
-    # print('format_geo_box: {}'.format(results))
-    return results
+        south = box[0]
+        west = box[1]
+        north = box[2]
+        east = box[3]
+    else:
+        return None
+
+    geo_box = "POLYGON (({} {}, {} {}, {} {}, {} {}, {} {}))".format(
+        west, south,
+        east, south,
+        east, north,
+        west, north,
+        west, south)
+    return geo_box
 
 
 def format_geo_polygons(polygons):
