@@ -10,16 +10,25 @@ logger = logging.getLogger(__name__)
 
 def format_geo_point(point):
     if isinstance(point, dict):
-        if not point.get('pointLatitude') or \
-           not point.get('pointLongitude'):
-            return None
-        return ','.join(
-            [point.get('pointLatitude'), point.get('pointLongitude')])
-    if isinstance(point, dict):
-        if len(point.split(' ')) != 2:
-            return None
-        point = [float(i) for i in point.split(' ')]
-        return '{} {}'.format(point[0], point[1])
+        lon = point.get('pointLongitude')
+        lat = point.get('pointLatitude')
+        if lon and lat:
+            # WKT (well known text):
+            # Note: this fails due to a bug in Elasticsearch (see https://github.com/elastic/elasticsearch/issues/24616)
+            # which has only been fixed in ES v7.5 (see https://github.com/elastic/elasticsearch/commit/e334baf6fcc50a7c27e6ec4b23cb08c1a0d2ad6f)
+            # point_str = 'POINT ({} {})'.format(lon, lat)
+            # return point_str
+
+            # So we use GeoJSON instead:
+            try:
+                point_dict = {
+                    'type': 'point',
+                    'coordinates': [float(lon), float(lat)]
+                }
+                return point_dict
+            except ValueError:
+                pass
+    return None
 
 
 def format_geo_box(box):
