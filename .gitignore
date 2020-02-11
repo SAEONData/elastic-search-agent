@@ -35,3 +35,4 @@ tags
 buildout-cache
 atlassian-*.xml
 zeocluster
+.venv/
