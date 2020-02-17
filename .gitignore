@@ -36,3 +36,4 @@ buildout-cache
 atlassian-*.xml
 zeocluster
 .venv/
+.env

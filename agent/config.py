@@ -1,12 +1,16 @@
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # CherryPy testng details
-server_domain = 'localhost'
-server_port = 9210
+server_domain = os.getenv('ELASTIC_AGENT_HOST')
+server_port = int(os.getenv('ELASTIC_AGENT_PORT'))
 server_url = 'http://{}:{}'.format(server_domain, server_port)
 
 # ES details
-es_domain = 'localhost'
-es_port = 9200
+es_domain = os.getenv('ELASTIC_SEARCH_HOST')
+es_port = int(os.getenv('ELASTIC_SEARCH_PORT'))
 metadata_index_name = 'md_index_1'
 token_index_name = 'rt_index_1'
 

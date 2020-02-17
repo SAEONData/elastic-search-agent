@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='ElasticSearch Agent',
-    version='0.1',
+    version='0.1.1',
     description='An agent to maintain metadata records in Elastic Search',
     url='',
     author='Mike Metcalfe',
@@ -15,6 +15,7 @@ setup(
         'cheroot==6.0.0',
         'tempora==1.10',
         'elasticsearch_dsl==6.1.0',
+        'python-dotenv',
     ],
-    python_requires='>=3',
+    python_requires='~=3.6',
 )
